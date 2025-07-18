@@ -1,110 +1,111 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, TouchableOpacity, Animated } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRef } from 'react';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+export default function ExploreScreen() {
+  const systemColorScheme = useColorScheme();
+  const gradientColors: [string, string] = systemColorScheme === 'dark'
+    ? ['#305252', '#4C5B61']
+    : ['#F4F8FB', '#B9E9F7'];
+  const buttonScale = useRef(new Animated.Value(1)).current;
 
-export default function TabTwoScreen() {
+  const handleNextPress = () => {
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Aquí puedes navegar a la siguiente pantalla cuando la definas
+      // Por ahora solo feedback visual
+    });
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={gradientColors}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      <Text style={[styles.title, systemColorScheme === 'dark' && { color: '#F4F8FB' }]}>¡Bienvenido!</Text>
+      <View style={styles.messageBlock}>
+        <Text style={[styles.message, systemColorScheme === 'dark' && { color: '#B9E9F7', backgroundColor: 'rgba(48,82,82,0.18)' }]}>📝 Organizá tus tareas de forma simple y divertida.</Text>
+        <Text style={[styles.message, systemColorScheme === 'dark' && { color: '#B9E9F7', backgroundColor: 'rgba(48,82,82,0.18)' }]}>🦎 Tu ajolote evoluciona cuando completas tareas.</Text>
+        <Text style={[styles.message, systemColorScheme === 'dark' && { color: '#B9E9F7', backgroundColor: 'rgba(48,82,82,0.18)' }]}>🎨 Personalizalo, desbloqueá accesorios y creá hábitos.</Text>
+      </View>
+      <Animated.View style={{ transform: [{ scale: buttonScale }], marginTop: 40 }}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleNextPress}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.buttonText, systemColorScheme === 'dark' && { color: '#305252' } ]}>Siguiente</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F4F8FB',
+    padding: 32,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  title: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 32,
+    color: '#305252',
+    marginBottom: 32,
+    textAlign: 'center',
+    letterSpacing: 1.1,
+  },
+  messageBlock: {
+    gap: 24,
+    width: '100%',
+    alignItems: 'center',
+  },
+  message: {
+    fontFamily: 'Nunito',
+    fontSize: 20,
+    color: '#588686',
+    textAlign: 'center',
+    lineHeight: 30,
+    backgroundColor: 'rgba(185,233,247,0.18)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    width: '100%',
+    maxWidth: 400,
+  },
+  button: {
+    backgroundColor: "#f78fc7",
+    paddingVertical: 22,
+    paddingHorizontal: 56,
+    borderRadius: 24,
+    elevation: 6,
+    marginBottom: 0,
+    shadowColor: '#f78fc7',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontFamily: "Nunito-Bold",
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 22,
+    letterSpacing: 1.1,
   },
 });

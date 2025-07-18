@@ -6,6 +6,7 @@ import { useColorScheme } from "react-native";
 
 export default function HomeScreen() {
   const logoAnim = useRef(new Animated.Value(0)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
   const systemColorScheme = useColorScheme();
 
   useEffect(() => {
@@ -28,9 +29,26 @@ export default function HomeScreen() {
     ]).start();
   }, []);
 
-  const gradientColors = systemColorScheme === 'dark'
+  const gradientColors: [string, string] = systemColorScheme === 'dark'
     ? ['#305252', '#4C5B61']
     : ['#F4F8FB', '#B9E9F7'];
+
+  const handleButtonPress = () => {
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      router.replace("/(tabs)/explore");
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -53,15 +71,18 @@ export default function HomeScreen() {
       />
       <Text style={[styles.title, systemColorScheme === 'dark' && { color: '#F4F8FB', textShadowColor: 'rgba(0,0,0,0.25)' } ]}>Axofi</Text>
       <Text style={[styles.subtitle, systemColorScheme === 'dark' && { color: '#B9E9F7' } ]}>
-        Organización simple, motivación real.
+      Tu espacio, tu ritmo, sin distracciones.
       </Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.replace("/(tabs)/explore")}
-      >
-        <Text style={[styles.buttonText, systemColorScheme === 'dark' && { color: '#305252' } ]}>¡Comenzar!</Text>
-      </TouchableOpacity>
-      <Text style={[styles.footer, systemColorScheme === 'dark' && { color: '#B9E9F7' } ]}>Tu espacio, tu ritmo, sin distracciones.</Text>
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleButtonPress}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.buttonText, systemColorScheme === 'dark' && { color: '#305252' } ]}>¡Comenzar!</Text>
+        </TouchableOpacity>
+      </Animated.View>
+      <Text style={[styles.footer, systemColorScheme === 'dark' && { color: '#B9E9F7' } ]}>Toca comenzar y conoce tu nuevo compañero</Text>
     </View>
   );
 }
@@ -106,15 +127,15 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#f78fc7",
-    paddingVertical: 18,
+    paddingVertical: 22,
     paddingHorizontal: 56,
-    borderRadius: 18,
-    elevation: 4,
+    borderRadius: 24,
+    elevation: 6,
     marginBottom: 28,
     shadowColor: '#f78fc7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
   },
   buttonText: {
     fontFamily: "Nunito-Bold",
@@ -125,8 +146,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     fontFamily: "Nunito",
-    fontSize: 15,
-    color: "#a5bab9",
+    fontSize: 14,
+    color: "#588686",
     position: "absolute",
     bottom: 24,
     textAlign: "center",
