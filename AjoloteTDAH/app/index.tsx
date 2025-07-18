@@ -46,7 +46,7 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      router.replace("/(tabs)/explore");
+      router.replace("/explore");
     });
   };
 
@@ -59,7 +59,7 @@ export default function HomeScreen() {
         end={{ x: 1, y: 1 }}
       />
       <Animated.Image
-        source={require("../../assets/images/axofi-logo-v1.png")}
+        source={require("../assets/images/axofi-logo-v1.png")}
         style={[
           styles.logo,
           {
