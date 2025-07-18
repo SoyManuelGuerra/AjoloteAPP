@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from "react-native";
+import { Colors } from '../constants/Colors';
 
 export default function HomeScreen() {
   const logoAnim = useRef(new Animated.Value(0)).current;
@@ -29,9 +30,11 @@ export default function HomeScreen() {
     ]).start();
   }, []);
 
-  const gradientColors: [string, string] = systemColorScheme === 'dark'
-    ? ['#305252', '#4C5B61']
-    : ['#F4F8FB', '#B9E9F7'];
+  const isDark = systemColorScheme === 'dark';
+  const palette = isDark ? Colors.dark : Colors;
+  const gradientColors: [string, string, string] = isDark
+    ? ['#2D2F36', '#3A3D45', '#484C55']
+    : [palette.background, palette.card, '#D9D5CC'];
 
   const handleButtonPress = () => {
     Animated.sequence([
@@ -46,17 +49,17 @@ export default function HomeScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      router.replace("/explore");
+      router.replace("/welcome");
     });
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: palette.background }] }>
       <LinearGradient
         colors={gradientColors}
         style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
       />
       <Animated.Image
         source={require("../assets/images/axofi-logo-v1.png")}
@@ -69,20 +72,20 @@ export default function HomeScreen() {
         ]}
         resizeMode="contain"
       />
-      <Text style={[styles.title, systemColorScheme === 'dark' && { color: '#F4F8FB', textShadowColor: 'rgba(0,0,0,0.25)' } ]}>Axofi</Text>
-      <Text style={[styles.subtitle, systemColorScheme === 'dark' && { color: '#B9E9F7' } ]}>
-      Tu espacio, tu ritmo, sin distracciones.
+      <Text style={[styles.title, { color: palette.text }, isDark && { textShadowColor: 'rgba(0,0,0,0.25)' } ]}>Axofi</Text>
+      <Text style={[styles.subtitle, { color: palette.textSecondary } ]}>
+        Tu espacio, tu ritmo, sin distracciones.
       </Text>
       <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, { backgroundColor: palette.primary }]}
           onPress={handleButtonPress}
           activeOpacity={0.8}
         >
-          <Text style={[styles.buttonText, systemColorScheme === 'dark' && { color: '#305252' } ]}>¡Comenzar!</Text>
+          <Text style={[styles.buttonText, { color: palette.onPrimary } ]}>¡Comenzar!</Text>
         </TouchableOpacity>
       </Animated.View>
-      <Text style={[styles.footer, systemColorScheme === 'dark' && { color: '#B9E9F7' } ]}>Toca comenzar y conoce tu nuevo compañero</Text>
+      <Text style={[styles.footer, { color: palette.textSecondary } ]}>Toca comenzar y conoce tu nuevo compañero</Text>
     </View>
   );
 }
@@ -92,7 +95,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F4F8FB",
     padding: 32,
   },
   logo: {
@@ -103,16 +105,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 8,
     borderRadius: 32,
-    // padding: 8, // Eliminado para mejor alineación
   },
   title: {
     fontFamily: "Nunito-Bold",
     fontSize: 38,
     fontWeight: "700",
-    color: "#305252",
     marginBottom: 10,
     letterSpacing: 1.2,
-    textAlign: "center", // Agregado para centrar el texto
+    textAlign: "center",
     textShadowColor: 'rgba(0,0,0,0.08)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
@@ -120,13 +120,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: "Nunito",
     fontSize: 20,
-    color: "#588686",
     marginBottom: 44,
     textAlign: "center",
     lineHeight: 28,
   },
   button: {
-    backgroundColor: "#f78fc7",
     paddingVertical: 22,
     paddingHorizontal: 56,
     borderRadius: 24,
@@ -139,7 +137,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: "Nunito-Bold",
-    color: "#fff",
     fontWeight: "700",
     fontSize: 22,
     letterSpacing: 1.1,
@@ -147,61 +144,10 @@ const styles = StyleSheet.create({
   footer: {
     fontFamily: "Nunito",
     fontSize: 14,
-    color: "#588686",
     position: "absolute",
     bottom: 24,
     textAlign: "center",
     width: "100%",
     letterSpacing: 0.5,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 28,
-  },
-  menuButton: {
-    flex: 1,
-    paddingVertical: 18,
-    borderRadius: 18,
-    elevation: 4,
-    marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    alignItems: 'center',
-  },
-  menuButtonInicio: {
-    backgroundColor: '#B9E9F7', // Celeste Claro
-  },
-  menuButtonExplorar: {
-    backgroundColor: '#F8B7D8', // Rosa Pastel
-  },
-  menuButtonText: {
-    fontFamily: 'Nunito-Bold',
-    color: '#305252', // Azul Grisáceo
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-  },
-  themeToggle: {
-    position: 'absolute',
-    top: 40,
-    right: 24,
-    zIndex: 10,
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  themeToggleText: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-    color: '#305252',
-  },
-});
+}); 

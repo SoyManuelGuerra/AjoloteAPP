@@ -3,24 +3,32 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
-
 export const Colors = {
-  light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-  },
+  // Modo claro
+  background: '#F6F4EF', // Fondo principal
+  card: '#FFFFFF', // Fondo secundario (cards, inputs)
+  text: '#2A3B47', // Texto principal
+  textSecondary: '#7D848D', // Texto secundario
+  primary: '#5A7893', // Botón primario (relleno)
+  onPrimary: '#FFFFFF', // Texto en botón primario
+  secondary: 'transparent', // Botón secundario (outline)
+  secondaryBorder: '#5A7893', // Borde botón secundario
+  onSecondary: '#5A7893', // Texto en botón secundario
+  accent: '#A8C3B8', // Botón de acento
+  accentText: '#C4B8D9', // Texto/acento suave
+
+  // Modo oscuro
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    background: '#2D2F36', // Fondo principal
+    card: '#3A3D45', // Fondo secundario
+    text: '#F6F4EF', // Texto principal
+    textSecondary: '#AEB5BC', // Texto secundario
+    primary: '#A8C3B8', // Botón primario (relleno)
+    onPrimary: '#2A3B47', // Texto en botón primario
+    secondary: 'transparent', // Botón secundario (outline)
+    secondaryBorder: '#A8C3B8', // Borde botón secundario
+    onSecondary: '#A8C3B8', // Texto en botón secundario
+    accent: '#C4B8D9', // Acentos lavanda
+    accentText: '#C4B8D9', // Texto/acento suave
   },
 };
