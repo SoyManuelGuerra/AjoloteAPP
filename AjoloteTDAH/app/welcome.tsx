@@ -10,7 +10,7 @@ export default function ExploreScreen() {
   const palette = isDark ? Colors.dark : Colors;
   const gradientColors: [string, string, string] = isDark
     ? ['#2D2F36', '#3A3D45', '#484C55']
-    : [palette.background, palette.card, '#D9D5CC'];
+    : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
   const buttonScale = useRef(new Animated.Value(1)).current;
 
   // Estado para habilitar el botón
@@ -75,7 +75,7 @@ export default function ExploreScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      router.push('/register');
+      router.push('/ChooseAccess');
     });
   };
 

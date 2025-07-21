@@ -1,67 +1,64 @@
-import { View, Text, StyleSheet, useColorScheme, TouchableOpacity, Animated } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors } from '../constants/Colors';
 
 export default function RegisterScreen() {
-  const systemColorScheme = useColorScheme();
-  const isDark = systemColorScheme === 'dark';
-  const palette = isDark ? Colors.dark : Colors;
-  const gradientColors: [string, string, string] = isDark
-    ? ['#2D2F36', '#3A3D45', '#484C55']
-    : [palette.background, palette.card, '#D9D5CC'];
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const palette = Colors;
 
-  // Animación para el título
-  const titleScale = useRef(new Animated.Value(0.7)).current;
-  useEffect(() => {
-    Animated.sequence([
-      Animated.spring(titleScale, {
-        toValue: 1.15,
-        friction: 2,
-        useNativeDriver: true,
-      }),
-      Animated.spring(titleScale, {
-        toValue: 1,
-        friction: 3,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
+  const handleRegister = () => {
+    if (!email || !password || !confirmPassword) {
+      setError('Completa todos los campos.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+    setError('');
+    // Aquí irá la lógica de registro real
+    router.replace('/welcome'); // Por ahora solo regresa a bienvenida
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: palette.background }] }>
-      <LinearGradient
-        colors={gradientColors}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
+    <View style={styles.container}>
+      <Text style={styles.title}>Crear cuenta</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Correo electrónico"
+        placeholderTextColor={palette.textSecondary}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
       />
-      <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/welcome')}>
-        <Text style={styles.backButtonText}>←</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        placeholderTextColor={palette.textSecondary}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Confirmar contraseña"
+        placeholderTextColor={palette.textSecondary}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+      />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Registrarme</Text>
       </TouchableOpacity>
-      <Animated.Text
-        style={[
-          styles.title,
-          { color: palette.text },
-          { fontWeight: 'bold' },
-          { transform: [{ scale: titleScale }] },
-          systemColorScheme === 'dark' && { textShadowColor: 'rgba(0,0,0,0.25)' }
-        ]}
-      >
-        ¿Cómo quieres continuar?
-      </Animated.Text>
-      <View style={styles.optionsBlock}>
-        <TouchableOpacity style={[styles.optionButton, styles.signupButton, { backgroundColor: palette.primary, shadowColor: palette.primary }]} onPress={() => router.replace('/signup')} activeOpacity={0.8}>
-          <Text style={[styles.optionButtonText, { color: palette.onPrimary }]}>Registrarme</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.optionButton, styles.loginButton, { backgroundColor: palette.card, borderColor: palette.primary, shadowColor: palette.card }]} onPress={() => router.replace('/login')} activeOpacity={0.8}>
-          <Text style={[styles.optionButtonText, { color: palette.primary }]}>Ya tengo cuenta</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.optionButton, styles.guestButton, { backgroundColor: palette.accent, shadowColor: palette.accent }]} onPress={() => router.replace('/home')} activeOpacity={0.8}>
-          <Text style={[styles.optionButtonText, { color: palette.onPrimary }]}>Continuar como invitado</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity onPress={() => router.replace('/ChooseAccess')}>
+        <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -72,59 +69,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    backgroundColor: Colors.background,
   },
   title: {
     fontFamily: 'Nunito-Bold',
-    fontSize: 32,
+    fontSize: 28,
     marginBottom: 32,
+    color: Colors.text,
     textAlign: 'center',
-    letterSpacing: 1.1,
   },
-  optionsBlock: {
+  input: {
     width: '100%',
     maxWidth: 400,
-    alignItems: 'center',
-    marginTop: 8,
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    fontSize: 18,
+    marginBottom: 18,
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.accent,
   },
-  optionButton: {
-    width: '100%',
+  button: {
+    backgroundColor: Colors.primary,
     borderRadius: 24,
     paddingVertical: 18,
     paddingHorizontal: 56,
     marginBottom: 18,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
   },
-  optionButtonText: {
+  buttonText: {
+    color: Colors.onPrimary,
     fontFamily: 'Nunito-Bold',
-    fontWeight: '700',
     fontSize: 20,
+    fontWeight: '700',
     letterSpacing: 1.1,
   },
-  signupButton: {},
-  loginButton: {
-    borderWidth: 2,
+  link: {
+    color: Colors.primary,
+    fontFamily: 'Nunito',
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: 'center',
   },
-  guestButton: {},
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 24,
-    zIndex: 10,
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 16,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  backButtonText: {
-    fontSize: 22,
-    color: '#305252',
-    fontWeight: 'bold',
+  error: {
+    color: '#d32f2f',
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: 'center',
   },
 }); 
