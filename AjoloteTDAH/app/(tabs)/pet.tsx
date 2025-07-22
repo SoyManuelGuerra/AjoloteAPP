@@ -148,22 +148,6 @@ export default function PetScreen() {
       }}>
         ¡Completa tus tareas para que tu ajolote evolucione!
       </Text>
-
-      {/* Botón o CTA personalizado */}
-      <TouchableOpacity
-        style={{
-          backgroundColor: palette.primary,
-          borderRadius: 22,
-          paddingVertical: 14,
-          paddingHorizontal: 36,
-          alignSelf: 'center',
-          marginTop: 8,
-        }}
-        onPress={() => { /* Aquí puedes poner la acción personalizada */ }}
-        activeOpacity={0.85}
-      >
-        <Text style={{ color: palette.onPrimary, fontFamily: 'Nunito-Bold', fontSize: 18 }}>¡Mímame!</Text>
-      </TouchableOpacity>
     </View>
   );
 }

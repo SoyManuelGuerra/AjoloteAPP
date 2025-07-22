@@ -8,6 +8,7 @@ import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { Svg, Circle } from 'react-native-svg';
 import { useRef } from 'react';
 import { useTasks } from '../../context/TasksContext';
+import { usePoints } from '../../context/PointsContext';
 
 const MOTIVATIONS = [
   '¡Hoy es un gran día para avanzar! 🌞',
@@ -26,6 +27,7 @@ type Task = { id: string; title: string; completed?: boolean };
 
 export default function TasksScreen() {
   const { tasks, addTask, editTask, deleteTask, toggleCompleteTask } = useTasks();
+  const { addPoints } = usePoints();
   const [modalVisible, setModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -94,6 +96,15 @@ export default function TasksScreen() {
   // const toggleCompleteTask = (id: string) => {
   //   setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   // };
+
+  // Nueva función para manejar el toggle y sumar puntos
+  const handleToggleCompleteTask = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (task && !task.completed) {
+      addPoints(10); // Suma 10 puntos por tarea completada
+    }
+    toggleCompleteTask(id);
+  };
 
   const completedCount = tasks.filter(t => t.completed).length;
   const totalCount = tasks.length;
@@ -178,7 +189,7 @@ export default function TasksScreen() {
                 </Text>
               </TouchableOpacity>
               <View style={styles.taskActions}>
-                <TouchableOpacity onPress={() => toggleCompleteTask(item.id)} style={styles.checkButton}>
+                <TouchableOpacity onPress={() => handleToggleCompleteTask(item.id)} style={styles.checkButton}>
                   <Ionicons
                     name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
                     size={26}

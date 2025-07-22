@@ -41,6 +41,7 @@ export default function TabLayout() {
         name="rewards"
         options={{
           title: "Recompensas",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="gift-outline" size={size} color={color} />
           ),
@@ -50,6 +51,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Perfil",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-circle-outline" size={size} color={color} />
           ),
