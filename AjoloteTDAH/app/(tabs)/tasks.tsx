@@ -1,7 +1,13 @@
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Modal, TextInput, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Modal, TextInput, useColorScheme, Alert } from 'react-native';
 import { useState } from 'react';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
+import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
+import { Svg, Circle } from 'react-native-svg';
+import { useRef } from 'react';
+import { useTasks } from '../../context/TasksContext';
 
 const MOTIVATIONS = [
   '¡Hoy es un gran día para avanzar! 🌞',
@@ -11,23 +17,43 @@ const MOTIVATIONS = [
   'La constancia es la clave del éxito. 💪'
 ];
 
-const initialTasks = [
-  { id: '1', title: 'Tarea de ejemplo 1' },
-  { id: '2', title: 'Tarea de ejemplo 2' },
+const initialTasks: Task[] = [
+  { id: '1', title: 'Tarea de ejemplo 1', completed: false },
+  { id: '2', title: 'Tarea de ejemplo 2', completed: false },
 ];
 
-type Task = { id: string; title: string };
+type Task = { id: string; title: string; completed?: boolean };
 
 export default function TasksScreen() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const { tasks, addTask, editTask, deleteTask, toggleCompleteTask } = useTasks();
   const [modalVisible, setModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const motivation = MOTIVATIONS[Math.floor(Math.random() * MOTIVATIONS.length)];
+  const [addPressed, setAddPressed] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
   const palette = isDark ? Colors.dark : Colors;
+
+  const TASKS_KEY = 'ajolote_tasks';
+
+  // Elimina el estado local de tasks y toda la lógica de persistencia
+  // useEffect(() => {
+  //   (async () => {
+  //     const saved = await AsyncStorage.getItem(TASKS_KEY);
+  //     if (saved) setTasks(JSON.parse(saved));
+  //   })();
+  // }, []);
+
+  // useEffect(() => {
+  //   AsyncStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  // }, [tasks]);
+
+  // useEffect(() => {
+  //   AsyncStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+  // }, []);
 
   const openAddModal = () => {
     setEditingTask(null);
@@ -44,9 +70,9 @@ export default function TasksScreen() {
   const handleSaveTask = () => {
     if (taskInput.trim() === '') return;
     if (editingTask) {
-      setTasks(tasks.map(t => t.id === editingTask.id ? { ...t, title: taskInput } : t));
+      editTask(editingTask.id, taskInput);
     } else {
-      setTasks([...tasks, { id: Date.now().toString(), title: taskInput }]);
+      addTask(taskInput);
     }
     setModalVisible(false);
     setTaskInput('');
@@ -54,36 +80,143 @@ export default function TasksScreen() {
   };
 
   const handleDeleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
+    Alert.alert(
+      'Eliminar tarea',
+      '¿Estás seguro de que quieres eliminar esta tarea?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', style: 'destructive', onPress: () => deleteTask(id) }
+      ]
+    );
   };
+
+  // Reemplaza setTasks por las funciones del contexto en agregar, editar, eliminar, completar
+  // const toggleCompleteTask = (id: string) => {
+  //   setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  // };
+
+  const completedCount = tasks.filter(t => t.completed).length;
+  const totalCount = tasks.length;
+  const progress = totalCount > 0 ? completedCount / totalCount : 0;
+  const circleSize = 32;
+  const strokeWidth = 4;
+  const radius = (circleSize - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progressStroke = circumference * (1 - progress);
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
-      <Text style={[styles.title, { color: palette.text } ]}>Tareas de hoy</Text>
-      <FlatList
-        data={tasks}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <View style={[styles.taskItem, { backgroundColor: palette.card }] }>
-            <Text style={[styles.taskText, { color: palette.text } ]}>{item.title}</Text>
-            <View style={styles.taskActions}>
-              <TouchableOpacity onPress={() => openEditModal(item)}>
-                <Ionicons name="create-outline" size={22} color={palette.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleDeleteTask(item.id)}>
-                <Ionicons name="trash-outline" size={22} color="#d32f2f" />
-              </TouchableOpacity>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 48, marginBottom: 8 }}>
+        <Text style={[styles.title, { color: palette.text, marginTop: 0, marginBottom: 0 }]}>Tareas de hoy</Text>
+        {totalCount > 0 && (
+          <View style={{ marginLeft: 12 }}>
+            <Svg width={circleSize} height={circleSize}>
+              <Circle
+                cx={circleSize / 2}
+                cy={circleSize / 2}
+                r={radius}
+                stroke={isDark ? '#393C43' : '#E7DFD6'}
+                strokeWidth={strokeWidth}
+                fill="none"
+              />
+              <Circle
+                cx={circleSize / 2}
+                cy={circleSize / 2}
+                r={radius}
+                stroke={palette.primary}
+                strokeWidth={strokeWidth}
+                fill="none"
+                strokeDasharray={circumference}
+                strokeDashoffset={progressStroke}
+                strokeLinecap="round"
+                rotation="-90"
+                origin={`${circleSize / 2}, ${circleSize / 2}`}
+              />
+            </Svg>
+            <View style={{ position: 'absolute', top: 0, left: 0, width: circleSize, height: circleSize, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: palette.primary, fontWeight: 'bold', fontSize: 12 }}>{`${completedCount}/${totalCount}`}</Text>
             </View>
           </View>
         )}
-        ListEmptyComponent={<Text style={[styles.empty, { color: palette.textSecondary } ]}>No tienes tareas para hoy.</Text>}
+      </View>
+      <FlatList
+        data={tasks}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => {
+          const expanded = expandedTaskId === item.id;
+          return (
+            <Animated.View
+              entering={FadeIn.duration(350)}
+              exiting={FadeOut.duration(350)}
+              layout={Layout.springify()}
+              style={[
+                styles.taskItem,
+                { 
+                  backgroundColor: isDark ? '#393C43' : '#E3E6EA',
+                  borderRadius: 24,
+                  shadowColor: isDark ? '#000' : '#aaa',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 12,
+                  boxShadow: isDark
+                    ? '0px 4px 16px rgba(0,0,0,0.18)'
+                    : '0px 4px 16px rgba(90,120,147,0.10)'
+                }
+              ]}
+            >
+              <TouchableOpacity onPress={() => setExpandedTaskId(expanded ? null : item.id)} style={{ flex: 1 }} activeOpacity={0.85}>
+                <Text
+                  style={[
+                    styles.taskText,
+                    { color: palette.text },
+                    item.completed && { textDecorationLine: 'line-through', color: palette.textSecondary, opacity: 0.6, transitionProperty: 'all', transitionDuration: '0.3s' }
+                  ]}
+                  numberOfLines={expanded ? undefined : 2}
+                  ellipsizeMode={expanded ? undefined : 'tail'}
+                >
+                  {item.title}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.taskActions}>
+                <TouchableOpacity onPress={() => toggleCompleteTask(item.id)} style={styles.checkButton}>
+                  <Ionicons
+                    name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={26}
+                    color={item.completed ? palette.primary : palette.textSecondary}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => openEditModal(item)}>
+                  <Ionicons name="pencil-outline" size={22} color={palette.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDeleteTask(item.id)}>
+                  <Ionicons name="trash-outline" size={22} color={isDark ? '#C98F8F' : '#D36A6A'} />
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          );
+        }}
+        ListEmptyComponent={<Text style={[styles.empty, { color: palette.textSecondary } ]}>¡Sin tareas pendientes! Tu ajolote está feliz 🥳</Text>}
         style={{ width: '100%' }}
+        contentContainerStyle={{ paddingBottom: 220 }}
       />
       <View style={styles.ajoloteContainer}>
         <Image source={require('../../assets/images/axofi-logo-v1.png')} style={styles.ajoloteImage} resizeMode="contain" />
       </View>
       <Text style={[styles.motivation, { color: palette.primary } ]}>{motivation}</Text>
-      <TouchableOpacity style={[styles.addButton, { backgroundColor: palette.primary }]} onPress={openAddModal}>
+      <TouchableOpacity
+        style={[
+          styles.addButton,
+          {
+            backgroundColor: addPressed
+              ? (isDark ? '#7CA49A' : '#C4D6CE')
+              : palette.primary
+          }
+        ]}
+        onPress={openAddModal}
+        onPressIn={() => setAddPressed(true)}
+        onPressOut={() => setAddPressed(false)}
+        activeOpacity={0.85}
+      >
         <Ionicons name="add" size={32} color={palette.onPrimary} />
         <Text style={[styles.addButtonText, { color: palette.onPrimary } ]}>Agregar tarea</Text>
       </TouchableOpacity>
@@ -154,6 +287,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.text,
     flex: 1,
+    overflow: 'hidden',
   },
   taskActions: {
     flexDirection: 'row',
@@ -251,5 +385,10 @@ const styles = StyleSheet.create({
     color: Colors.onPrimary,
     fontFamily: 'Nunito-Bold',
     fontSize: 16,
+  },
+  checkButton: {
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 }); 

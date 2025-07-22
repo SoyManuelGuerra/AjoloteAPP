@@ -58,7 +58,7 @@ export default function RegisterScreen() {
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.replace('/ChooseAccess')}>
         <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
-      </TouchableOpacity>
+        </TouchableOpacity>
     </View>
   );
 }

@@ -1,13 +1,60 @@
 import { Tabs } from "expo-router";
+import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from 'react-native';
+import { Colors } from '../../constants/Colors';
 
 export default function TabLayout() {
+  const systemColorScheme = useColorScheme();
+  const isDark = systemColorScheme === 'dark';
+  const palette = isDark ? Colors.dark : Colors;
   return (
-    <Tabs>
-      <Tabs.Screen name="index" options={{ title: "Inicio", tabBarStyle: { display: "none" }, headerShown: false }} />
-      <Tabs.Screen name="tasks" options={{ title: "Tareas" }} />
-      <Tabs.Screen name="pet" options={{ title: "Ajolote" }} />
-      <Tabs.Screen name="rewards" options={{ title: "Recompensas" }} />
-      <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
+    <Tabs
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: palette.background,
+          borderTopWidth: 0,
+          elevation: 0,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="tasks"
+        options={{
+          title: "Tareas",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="checkmark-done-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="pet"
+        options={{
+          title: "Ajolote",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="happy-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="rewards"
+        options={{
+          title: "Recompensas",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="gift-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Perfil",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
