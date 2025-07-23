@@ -4,12 +4,14 @@ import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
-import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
-import { Svg, Circle } from 'react-native-svg';
+import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
+import { Svg, Circle, Rect } from 'react-native-svg';
 import { useRef } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 const MOTIVATIONS = [
   '¡Hoy es un gran día para avanzar! 🌞',
@@ -142,6 +144,12 @@ export default function TasksScreen() {
   const circumference = 2 * Math.PI * radius;
   const progressStroke = circumference * (1 - progress);
 
+  const progressAnim = useSharedValue(0);
+  useEffect(() => {
+    progressAnim.value = withTiming(220 * progress, { duration: 600 });
+  }, [progress]);
+  const animatedProps = useAnimatedProps(() => ({ width: progressAnim.value }));
+
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
       <LinearGradient
@@ -152,36 +160,6 @@ export default function TasksScreen() {
       />
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 48, marginBottom: 8 }}>
         <Text style={[styles.title, { color: palette.text, marginTop: 0, marginBottom: 0 }]}>Tareas de hoy</Text>
-        {totalCount > 0 && (
-          <View style={{ marginLeft: 12 }}>
-            <Svg width={circleSize} height={circleSize}>
-              <Circle
-                cx={circleSize / 2}
-                cy={circleSize / 2}
-                r={radius}
-                stroke={isDark ? '#393C43' : '#E7DFD6'}
-                strokeWidth={strokeWidth}
-                fill="none"
-              />
-              <Circle
-                cx={circleSize / 2}
-                cy={circleSize / 2}
-                r={radius}
-                stroke={palette.primary}
-                strokeWidth={strokeWidth}
-                fill="none"
-                strokeDasharray={circumference}
-                strokeDashoffset={progressStroke}
-                strokeLinecap="round"
-                rotation="-90"
-                origin={`${circleSize / 2}, ${circleSize / 2}`}
-              />
-            </Svg>
-            <View style={{ position: 'absolute', top: 0, left: 0, width: circleSize, height: circleSize, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: palette.primary, fontWeight: 'bold', fontSize }}>{`${completedCount}/${totalCount}`}</Text>
-            </View>
-          </View>
-        )}
       </View>
       <FlatList
         data={sortTasksByPriority(tasks)}
@@ -221,10 +199,10 @@ export default function TasksScreen() {
                     style={[
                       styles.taskText,
                       { color: palette.text },
-                      item.completed && { textDecorationLine: 'line-through', color: palette.textSecondary, opacity: 0.85 }
+                      item.completed && { textDecorationLine: 'line-through', color: '#999', opacity: 1 }
                     ]}
                     numberOfLines={expanded ? undefined : 2}
-                    ellipsizeMode={expanded ? undefined : 'tail'}
+                    ellipsizeMode="tail"
                   >
                     {item.title}
                   </Text>
@@ -273,10 +251,33 @@ export default function TasksScreen() {
         style={{ width: '100%' }}
         contentContainerStyle={{ paddingBottom: 220 }}
       />
-      <View style={styles.ajoloteContainer}>
-        <Image source={require('../../assets/images/axofi-logo-v1.png')} style={styles.ajoloteImage} resizeMode="contain" />
+      <View style={{ alignItems: 'center', width: '100%', marginTop: 32, marginBottom: 8 }}>
+        <View style={[
+          styles.progressBox,
+          { backgroundColor: palette.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, marginBottom: 0, marginTop: 0, width: 240, alignSelf: 'center' }
+        ]}>
+          <Text style={[styles.evolutionTitle, { color: palette.primary, marginBottom: 2, fontSize: 15 }]}>Evolución diaria</Text>
+          <View style={{ width: 220, height: 22, marginTop: 2, marginBottom: 2, justifyContent: 'center' }}>
+            <Svg width={220} height={22}>
+              <Rect x={0} y={0} width={220} height={22} rx={11} fill={isDark ? '#393C43' : '#E7DFD6'} />
+              <AnimatedRect
+                x={0}
+                y={0}
+                height={22}
+                rx={11}
+                fill={palette.primary}
+                animatedProps={animatedProps}
+              />
+            </Svg>
+            <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 22, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: palette.text, fontWeight: 'bold', fontSize: 13 }}>{`${completedCount}/${totalCount} tareas`}</Text>
+            </View>
+          </View>
+        </View>
       </View>
-      <Text style={[styles.motivation, { color: palette.primary } ]}>{motivation}</Text>
+      <View style={{ alignItems: 'center', marginTop: 32, marginBottom: 8 }}>
+        <Text style={[styles.motivation, { color: palette.primary } ]}>{motivation}</Text>
+      </View>
       <TouchableOpacity
         style={[
           styles.addButton,
@@ -535,5 +536,18 @@ const styles = StyleSheet.create({
     marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  progressBox: {
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+  },
+  evolutionTitle: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+    marginBottom: 8,
   },
 }); 

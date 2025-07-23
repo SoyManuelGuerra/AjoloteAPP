@@ -16,6 +16,7 @@ export const Colors = {
   onSecondary: '#6B8F71', // Texto en botón secundario
   accent: '#A8C3B8', // Botón de acento
   accentText: '#C4B8D9', // Texto/acento suave
+  icon: '#2A3B47', // Color de iconos en modo claro
 
   // Modo oscuro
   dark: {
@@ -30,5 +31,6 @@ export const Colors = {
     onSecondary: '#A8C3B8', // Texto en botón secundario
     accent: '#C4B8D9', // Acentos lavanda
     accentText: '#C4B8D9', // Texto/acento suave
+    icon: '#F6F4EF', // Color de iconos en modo oscuro
   },
 };
