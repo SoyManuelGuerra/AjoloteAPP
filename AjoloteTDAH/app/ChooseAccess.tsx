@@ -58,7 +58,15 @@ export default function ChooseAccess() {
         {/* <TouchableOpacity style={[styles.optionButton, styles.loginButton, { backgroundColor: palette.card, borderColor: palette.primary, shadowColor: palette.card }]} onPress={() => router.replace('login')} activeOpacity={0.8}>
           <Text style={[styles.optionButtonText, { color: palette.primary }]}>Ya tengo cuenta</Text>
         </TouchableOpacity> */}
-        <TouchableOpacity style={[styles.optionButton, styles.guestButton, { backgroundColor: palette.accent, shadowColor: palette.accent }]} onPress={() => router.replace('/(tabs)/tasks')} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={[
+            styles.optionButton,
+            styles.guestButton,
+            { backgroundColor: '#A89CC8', shadowColor: '#A89CC8' }
+          ]}
+          onPress={() => router.replace('/(tabs)/tasks')}
+          activeOpacity={0.8}
+        >
           <Text style={[styles.optionButtonText, { color: palette.onPrimary }]}>Continuar como invitado</Text>
         </TouchableOpacity>
       </View>

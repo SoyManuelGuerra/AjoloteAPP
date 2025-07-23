@@ -3,6 +3,7 @@ import { Colors } from '../../constants/Colors';
 import { usePoints } from '../../context/PointsContext';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // Configuración de niveles
 const LEVELS = [0, 100, 250, 500, 1000]; // Puedes ajustar estos valores
@@ -27,6 +28,9 @@ export default function RewardsScreen() {
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
   const palette = isDark ? Colors.dark : Colors;
+  const gradientColors: [string, string, string] = isDark
+    ? ['#2D2F36', '#3A3D45', '#484C55']
+    : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
   const { points, setPoints } = usePoints();
   const [unlocked, setUnlocked] = useState<string[]>([]);
 
@@ -62,6 +66,12 @@ export default function RewardsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
+      <LinearGradient
+        colors={gradientColors}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 48, marginBottom: 8 }}>
         <Text style={[styles.title, { color: palette.text, marginTop: 0, marginBottom: 0 }]}>Recompensas</Text>
       </View>
@@ -88,7 +98,7 @@ export default function RewardsScreen() {
               <Text style={{ color: palette.text, fontSize: 16 }}>{item.name}</Text>
               <Text style={{ color: palette.textSecondary, fontSize: 14 }}>Costo: {item.cost} pts</Text>
               <TouchableOpacity
-                style={[styles.unlockButton, { backgroundColor: isUnlocked ? palette.primary : palette.accent }]}
+                style={[styles.unlockButton, { backgroundColor: isUnlocked ? palette.primary : '#A89CC8' }]}
                 disabled={isUnlocked || points < item.cost}
                 onPress={() => handleUnlock(item.id, item.cost)}
               >

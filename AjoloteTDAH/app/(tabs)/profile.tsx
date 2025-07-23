@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const LEVELS = [0, 100, 250, 500, 1000];
 const USER_KEY = 'ajolote_user_data';
@@ -12,6 +13,9 @@ export default function ProfileScreen() {
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
   const palette = isDark ? Colors.dark : Colors;
+  const gradientColors: [string, string, string] = isDark
+    ? ['#2D2F36', '#3A3D45', '#484C55']
+    : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
   const { petName } = useTasks();
   const { points } = usePoints();
 
@@ -58,6 +62,12 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: palette.background }} contentContainerStyle={styles.container}>
+      <LinearGradient
+        colors={gradientColors}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <Text style={[styles.title, { color: palette.text }]}>Perfil y Configuración</Text>
       {/* Bloque de mascota/perfil */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Tu Ajolote</Text>

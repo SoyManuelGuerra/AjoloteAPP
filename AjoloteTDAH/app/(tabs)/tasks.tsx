@@ -9,6 +9,7 @@ import { Svg, Circle } from 'react-native-svg';
 import { useRef } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const MOTIVATIONS = [
   '¡Hoy es un gran día para avanzar! 🌞',
@@ -18,12 +19,28 @@ const MOTIVATIONS = [
   'La constancia es la clave del éxito. 💪'
 ];
 
+const PRIORITY_OPTIONS = [
+  { value: 'high', label: 'Alta' },
+  { value: 'medium', label: 'Media' },
+  { value: 'low', label: 'Baja' },
+];
+
 const initialTasks: Task[] = [
   { id: '1', title: 'Tarea de ejemplo 1', completed: false },
   { id: '2', title: 'Tarea de ejemplo 2', completed: false },
 ];
 
-type Task = { id: string; title: string; completed?: boolean };
+type Task = { id: string; title: string; completed?: boolean; priority?: 'high' | 'medium' | 'low' };
+
+// Función para ordenar tareas por prioridad
+function sortTasksByPriority(tasks: Task[]): Task[] {
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  return [...tasks].sort((a, b) => {
+    const pa = priorityOrder[a.priority || 'medium'];
+    const pb = priorityOrder[b.priority || 'medium'];
+    return pa - pb;
+  });
+}
 
 export default function TasksScreen() {
   const { tasks, addTask, editTask, deleteTask, toggleCompleteTask } = useTasks();
@@ -34,10 +51,14 @@ export default function TasksScreen() {
   const motivation = MOTIVATIONS[Math.floor(Math.random() * MOTIVATIONS.length)];
   const [addPressed, setAddPressed] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [taskPriority, setTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
 
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
   const palette = isDark ? Colors.dark : Colors;
+  const gradientColors: [string, string, string] = isDark
+    ? ['#2D2F36', '#3A3D45', '#484C55']
+    : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
 
   const TASKS_KEY = 'ajolote_tasks';
 
@@ -60,25 +81,28 @@ export default function TasksScreen() {
   const openAddModal = () => {
     setEditingTask(null);
     setTaskInput('');
+    setTaskPriority('medium');
     setModalVisible(true);
   };
 
   const openEditModal = (task: Task) => {
     setEditingTask(task);
     setTaskInput(task.title);
+    setTaskPriority(task.priority || 'medium');
     setModalVisible(true);
   };
 
   const handleSaveTask = () => {
     if (taskInput.trim() === '') return;
     if (editingTask) {
-      editTask(editingTask.id, taskInput);
+      editTask(editingTask.id, taskInput, taskPriority);
     } else {
-      addTask(taskInput);
+      addTask(taskInput, taskPriority);
     }
     setModalVisible(false);
     setTaskInput('');
     setEditingTask(null);
+    setTaskPriority('medium');
   };
 
   const handleDeleteTask = (id: string) => {
@@ -109,7 +133,10 @@ export default function TasksScreen() {
   const completedCount = tasks.filter(t => t.completed).length;
   const totalCount = tasks.length;
   const progress = totalCount > 0 ? completedCount / totalCount : 0;
-  const circleSize = 32;
+  // Ajustar tamaño del círculo según cantidad de dígitos
+  const maxDigits = Math.max(completedCount.toString().length, totalCount.toString().length);
+  const circleSize = maxDigits >= 2 ? 44 : 32;
+  const fontSize = maxDigits >= 2 ? 13 : 15;
   const strokeWidth = 4;
   const radius = (circleSize - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -117,6 +144,12 @@ export default function TasksScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
+      <LinearGradient
+        colors={gradientColors}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 48, marginBottom: 8 }}>
         <Text style={[styles.title, { color: palette.text, marginTop: 0, marginBottom: 0 }]}>Tareas de hoy</Text>
         {totalCount > 0 && (
@@ -145,13 +178,13 @@ export default function TasksScreen() {
               />
             </Svg>
             <View style={{ position: 'absolute', top: 0, left: 0, width: circleSize, height: circleSize, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: palette.primary, fontWeight: 'bold', fontSize: 12 }}>{`${completedCount}/${totalCount}`}</Text>
+              <Text style={{ color: palette.primary, fontWeight: 'bold', fontSize }}>{`${completedCount}/${totalCount}`}</Text>
             </View>
           </View>
         )}
       </View>
       <FlatList
-        data={tasks}
+        data={sortTasksByPriority(tasks)}
         keyExtractor={item => item.id}
         renderItem={({ item }) => {
           const expanded = expandedTaskId === item.id;
@@ -162,40 +195,70 @@ export default function TasksScreen() {
               layout={Layout.springify()}
               style={[
                 styles.taskItem,
-                { 
-                  backgroundColor: isDark ? '#393C43' : '#E3E6EA',
+                {
+                  backgroundColor: isDark ? '#393C43' : '#FFF8F1',
                   borderRadius: 24,
-                  shadowColor: isDark ? '#000' : '#aaa',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 12,
-                  boxShadow: isDark
-                    ? '0px 4px 16px rgba(0,0,0,0.18)'
-                    : '0px 4px 16px rgba(90,120,147,0.10)'
+                  shadowColor: isDark ? '#000' : '#B08B5E', // sombra más cálida en claro
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.18,
+                  shadowRadius: 18,
+                  elevation: 8,
+                  borderWidth: 1.5,
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.18)',
                 }
               ]}
             >
-              <TouchableOpacity onPress={() => setExpandedTaskId(expanded ? null : item.id)} style={{ flex: 1 }} activeOpacity={0.85}>
-                <Text
-                  style={[
-                    styles.taskText,
-                    { color: palette.text },
-                    item.completed && { textDecorationLine: 'line-through', color: palette.textSecondary, opacity: 0.6, transitionProperty: 'all', transitionDuration: '0.3s' }
-                  ]}
-                  numberOfLines={expanded ? undefined : 2}
-                  ellipsizeMode={expanded ? undefined : 'tail'}
-                >
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-              <View style={styles.taskActions}>
-                <TouchableOpacity onPress={() => handleToggleCompleteTask(item.id)} style={styles.checkButton}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginBottom: 4 }}>
+                <TouchableOpacity onPress={() => handleToggleCompleteTask(item.id)} style={styles.checkButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Ionicons
-                    name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                    name={item.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
                     size={26}
                     color={item.completed ? palette.primary : palette.textSecondary}
                   />
                 </TouchableOpacity>
+                <TouchableOpacity onPress={() => setExpandedTaskId(expanded ? null : item.id)} style={{ flex: 1 }} activeOpacity={0.85}>
+                  <Text
+                    style={[
+                      styles.taskText,
+                      { color: palette.text },
+                      item.completed && { textDecorationLine: 'line-through', color: palette.textSecondary, opacity: 0.85 }
+                    ]}
+                    numberOfLines={expanded ? undefined : 2}
+                    ellipsizeMode={expanded ? undefined : 'tail'}
+                  >
+                    {item.title}
+                  </Text>
+                </TouchableOpacity>
+                <View style={{ marginLeft: 8 }}>
+                  <View style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor:
+                      item.priority === 'high' ? 'rgba(255, 99, 71, 0.18)'
+                      : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.18)'
+                      : 'rgba(72, 199, 142, 0.18)',
+                    borderWidth: 1.5,
+                    borderColor:
+                      item.priority === 'high' ? 'rgba(255, 99, 71, 0.5)'
+                      : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.5)'
+                      : 'rgba(72, 199, 142, 0.5)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                    <Text style={{
+                      color:
+                        item.priority === 'high' ? 'rgba(255, 99, 71, 0.95)'
+                        : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.95)'
+                        : 'rgba(72, 199, 142, 0.95)',
+                      fontWeight: 'bold',
+                      fontSize: 16,
+                      lineHeight: 20,
+                    }}>!</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.taskActions}>
                 <TouchableOpacity onPress={() => openEditModal(item)}>
                   <Ionicons name="pencil-outline" size={22} color={palette.primary} />
                 </TouchableOpacity>
@@ -248,6 +311,69 @@ export default function TasksScreen() {
               onChangeText={setTaskInput}
               autoFocus
             />
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 16, width: '100%' }}>
+              {PRIORITY_OPTIONS.map(opt => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    backgroundColor: taskPriority === opt.value ? (opt.value === 'high' ? '#ffb3b3' : opt.value === 'medium' ? '#fff6b3' : '#b3ffb3') : 'transparent',
+                    borderRadius: 16,
+                    paddingVertical: 8,
+                    paddingHorizontal: 0,
+                    marginHorizontal: 4,
+                    borderWidth: taskPriority === opt.value ? 2 : 1,
+                    borderColor: taskPriority === opt.value ? '#888' : '#ccc',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={() => setTaskPriority(opt.value as 'high' | 'medium' | 'low')}
+                >
+                  <View style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor:
+                      opt.value === 'high' ? 'rgba(255, 99, 71, 0.18)'
+                      : opt.value === 'medium' ? 'rgba(255, 205, 86, 0.18)'
+                      : 'rgba(72, 199, 142, 0.18)',
+                    borderWidth: 1.5,
+                    borderColor:
+                      opt.value === 'high' ? 'rgba(255, 99, 71, 0.5)'
+                      : opt.value === 'medium' ? 'rgba(255, 205, 86, 0.5)'
+                      : 'rgba(72, 199, 142, 0.5)',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                    <Text style={{
+                      color:
+                        opt.value === 'high' ? 'rgba(255, 99, 71, 0.95)'
+                        : opt.value === 'medium' ? 'rgba(255, 205, 86, 0.95)'
+                        : 'rgba(72, 199, 142, 0.95)',
+                      fontWeight: 'bold',
+                      fontSize: 16,
+                      lineHeight: 20,
+                    }}>!</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={{ alignItems: 'center', marginBottom: 12 }}>
+              <Text style={{
+                fontSize: 16,
+                fontWeight: 'bold',
+                color:
+                  taskPriority === 'high' ? 'rgba(255, 99, 71, 0.95)'
+                  : taskPriority === 'medium' ? 'rgba(255, 205, 86, 0.95)'
+                  : 'rgba(72, 199, 142, 0.95)',
+              }}>
+                {taskPriority === 'high' ? 'Prioridad alta'
+                  : taskPriority === 'medium' ? 'Prioridad media'
+                  : 'Prioridad baja'}
+              </Text>
+            </View>
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.modalButton, { backgroundColor: palette.primary }]} onPress={handleSaveTask}>
                 <Text style={[styles.modalButtonText, { color: palette.onPrimary } ]}>{editingTask ? 'Guardar' : 'Agregar'}</Text>
@@ -279,16 +405,20 @@ const styles = StyleSheet.create({
   },
   taskItem: {
     backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
+    marginTop: 10,
+    marginHorizontal: 0,
     width: '100%',
     maxWidth: 400,
     alignSelf: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(120,120,120,0.08)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -336,6 +466,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 32,
     marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
   },
   addButtonText: {
     color: Colors.onPrimary,

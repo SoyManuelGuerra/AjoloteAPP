@@ -7,6 +7,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, w
 import { Ionicons } from '@expo/vector-icons';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const PET_STATES = [
   { mood: 'Feliz', message: '¡Tu ajolote está feliz y motivado! 🎉', img: require('../../assets/images/axofi-logo-v1.png') },
@@ -20,6 +21,9 @@ export default function PetScreen() {
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
   const palette = isDark ? Colors.dark : Colors;
+  const gradientColors: [string, string, string] = isDark
+    ? ['#2D2F36', '#3A3D45', '#484C55']
+    : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
   // Simulación de estado (en el futuro, esto puede depender del progreso real)
   const [petState] = useState(PET_STATES[0]);
   const { tasks, petName, setPetName } = useTasks();
@@ -61,6 +65,12 @@ export default function PetScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
+      <LinearGradient
+        colors={gradientColors}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       {/* Nombre editable como título grande, centrado y color accent */}
       <View style={{ alignItems: 'center', marginBottom: 8 }}>
         {editingName ? (
@@ -101,7 +111,8 @@ export default function PetScreen() {
             <Text style={{
               fontFamily: 'Nunito-Bold',
               fontSize: 34,
-              color: palette.accent,
+              color: palette.primary,
+              fontWeight: 'bold',
               marginBottom: 4,
               textAlign: 'center',
             }}>{petName}</Text>

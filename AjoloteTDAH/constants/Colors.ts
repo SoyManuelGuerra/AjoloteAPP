@@ -9,11 +9,11 @@ export const Colors = {
   card: '#FFFFFF', // Fondo secundario (cards, inputs)
   text: '#2A3B47', // Texto principal
   textSecondary: '#7D848D', // Texto secundario
-  primary: '#5A7893', // Botón primario (relleno)
-  onPrimary: '#FFFFFF', // Texto en botón primario
+  primary: '#6B8F71', // Botón primario (relleno) - VERDE MÁS OSCURO
+  onPrimary: '#FFFFFF', // Texto en botón primario (blanco para contraste)
   secondary: 'transparent', // Botón secundario (outline)
-  secondaryBorder: '#5A7893', // Borde botón secundario
-  onSecondary: '#5A7893', // Texto en botón secundario
+  secondaryBorder: '#6B8F71', // Borde botón secundario
+  onSecondary: '#6B8F71', // Texto en botón secundario
   accent: '#A8C3B8', // Botón de acento
   accentText: '#C4B8D9', // Texto/acento suave
 

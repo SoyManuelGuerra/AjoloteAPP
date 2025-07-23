@@ -5,12 +5,13 @@ export type Task = {
   id: string;
   title: string;
   completed?: boolean;
+  priority?: 'high' | 'medium' | 'low';
 };
 
 interface TasksContextType {
   tasks: Task[];
-  addTask: (title: string) => void;
-  editTask: (id: string, title: string) => void;
+  addTask: (title: string, priority?: 'high' | 'medium' | 'low') => void;
+  editTask: (id: string, title: string, priority?: 'high' | 'medium' | 'low') => void;
   deleteTask: (id: string) => void;
   toggleCompleteTask: (id: string) => void;
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
@@ -50,11 +51,11 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [petName]);
   const setPetName = (name: string) => setPetNameState(name);
 
-  const addTask = (title: string) => {
-    setTasks(prev => [...prev, { id: Date.now().toString(), title, completed: false }]);
+  const addTask = (title: string, priority: 'high' | 'medium' | 'low' = 'medium') => {
+    setTasks(prev => [...prev, { id: Date.now().toString(), title, completed: false, priority }]);
   };
-  const editTask = (id: string, title: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, title } : t));
+  const editTask = (id: string, title: string, priority: 'high' | 'medium' | 'low' = 'medium') => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, title, priority } : t));
   };
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
