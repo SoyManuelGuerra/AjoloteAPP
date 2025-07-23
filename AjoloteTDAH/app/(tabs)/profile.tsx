@@ -58,7 +58,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: palette.background }} contentContainerStyle={styles.container}>
-      <Text style={[styles.title, { color: palette.text }]}>Perfil & Configuración</Text>
+      <Text style={[styles.title, { color: palette.text }]}>Perfil y Configuración</Text>
       {/* Bloque de mascota/perfil */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Tu Ajolote</Text>
       <View style={[styles.profileBox, { backgroundColor: palette.card }] }>

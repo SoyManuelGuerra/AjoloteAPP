@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTasks } from '../../context/TasksContext';
+import { usePoints } from '../../context/PointsContext';
 
 const PET_STATES = [
   { mood: 'Feliz', message: '¡Tu ajolote está feliz y motivado! 🎉', img: require('../../assets/images/axofi-logo-v1.png') },
@@ -13,6 +14,7 @@ const PET_STATES = [
 ];
 
 const PET_NAME_KEY = 'ajolote_name';
+const LEVELS = [0, 100, 250, 500, 1000];
 
 export default function PetScreen() {
   const systemColorScheme = useColorScheme();
@@ -24,6 +26,12 @@ export default function PetScreen() {
   const completedCount = tasks.filter((t: any) => t.completed).length;
   const totalCount = tasks.length;
   const progress = totalCount > 0 ? completedCount / totalCount : 0;
+  const { points } = usePoints();
+  // Calcular nivel actual
+  let level = 1;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (points >= LEVELS[i]) level = i + 1;
+  }
   // Nombre editable simple
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(petName);
@@ -111,18 +119,23 @@ export default function PetScreen() {
           <Image source={petState.img} style={styles.petImage} resizeMode="contain" />
         </View>
       </Animated.View>
-
-      {/* Estado emocional + emoji */}
-      <Text style={{
-        fontFamily: 'Nunito-Bold',
-        fontSize: 22,
-        color: palette.primary,
-        textAlign: 'center',
-        marginBottom: 8,
-      }}>{petState.mood} {petState.mood === 'Feliz' ? '😊' : ''}</Text>
+      {/* Estado de ánimo encima del nivel y puntos */}
+      <View style={{ alignItems: 'center', marginBottom: 8 }}>
+        <View style={{ backgroundColor: palette.card, borderRadius: 14, paddingVertical: 6, paddingHorizontal: 18, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 }}>
+          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.primary, textAlign: 'center' }}>{petState.mood} {petState.mood === 'Feliz' ? '😊' : ''}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+          <Text style={{ fontSize: 20, marginRight: 2 }}>🌱</Text>
+          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 18, color: palette.primary, fontWeight: 'bold' }}>Nivel {level}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+          <Text style={{ fontSize: 18, marginRight: 2 }}>⭐</Text>
+          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.textSecondary, fontWeight: 'bold' }}>Puntos: {points}</Text>
+        </View>
+      </View>
 
       {/* Barra de evolución */}
-      <View style={styles.progressBox}>
+      <View style={[styles.progressBox, { backgroundColor: palette.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 }] }>
         <Text style={[styles.evolutionTitle, { color: palette.primary }]}>Evolución diaria</Text>
         <View style={{ width: 220, height: 22, marginTop: 8, marginBottom: 4 }}>
           <Svg width={220} height={22}>
@@ -130,7 +143,7 @@ export default function PetScreen() {
             <Rect x={0} y={0} width={220 * progress} height={22} rx={11} fill={palette.primary} />
           </Svg>
           <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: palette.primary, fontWeight: 'bold', fontSize: 13 }}>{`${completedCount}/${totalCount} tareas`}</Text>
+            <Text style={{ color: palette.text, fontWeight: 'bold', fontSize: 13 }}>{`${completedCount}/${totalCount} tareas`}</Text>
           </View>
         </View>
       </View>
@@ -212,12 +225,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   progressBox: {
-    backgroundColor: '#F5F5F7',
+    backgroundColor: Colors.card,
     borderRadius: 18,
     padding: 18,
     marginTop: 18,
     alignItems: 'center',
     width: '100%',
     maxWidth: 340,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
   },
 }); 

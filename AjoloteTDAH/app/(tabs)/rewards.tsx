@@ -12,6 +12,13 @@ const ACCESSORIES = [
   { id: 'hat', name: 'Gorro', cost: 50 },
   { id: 'glasses', name: 'Gafas', cost: 80 },
   { id: 'color', name: 'Color especial', cost: 120 },
+  { id: 'scarf', name: 'Bufanda', cost: 90 },
+  { id: 'bowtie', name: 'Moño', cost: 110 },
+  { id: 'cape', name: 'Capa', cost: 150 },
+  { id: 'crown', name: 'Corona', cost: 200 },
+  { id: 'mustache', name: 'Bigote', cost: 70 },
+  { id: 'earrings', name: 'Aretes', cost: 60 },
+  { id: 'backpack', name: 'Mochila', cost: 100 },
 ];
 
 const UNLOCKED_KEY = 'ajolote_unlocked_accessories';
