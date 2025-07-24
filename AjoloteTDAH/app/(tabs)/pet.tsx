@@ -3,7 +3,8 @@ import { Colors } from '../../constants/Colors';
 import { useState, useEffect } from 'react';
 import { Svg, Rect } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+// Quitar importación de Animated y hooks de reanimated
+// import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
@@ -40,21 +41,21 @@ export default function PetScreen() {
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(petName);
 
-  // Animación de flotación
-  const floatAnim = useSharedValue(0);
-  useEffect(() => {
-    floatAnim.value = withRepeat(
-      withSequence(
-        withTiming(-10, { duration: 1200 }),
-        withTiming(0, { duration: 1200 })
-      ),
-      -1,
-      true
-    );
-  }, []);
-  const floatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: floatAnim.value }],
-  }));
+  // Eliminar lógica de animación de flotación
+  // const floatAnim = useSharedValue(0);
+  // useEffect(() => {
+  //   floatAnim.value = withRepeat(
+  //     withSequence(
+  //       withTiming(-10, { duration: 1200 }),
+  //       withTiming(0, { duration: 1200 })
+  //     ),
+  //     -1,
+  //     true
+  //   );
+  // }, []);
+  // const floatStyle = useAnimatedStyle(() => ({
+  //   transform: [{ translateY: floatAnim.value }],
+  // }));
 
   // Elimina el useEffect que leía tareas de AsyncStorage y el estado local de tasks
 
@@ -121,7 +122,7 @@ export default function PetScreen() {
       </View>
 
       {/* Imagen del ajolote */}
-      <Animated.View style={[floatStyle, { alignItems: 'center', marginBottom: 8 }] }>
+      <View style={[{ alignItems: 'center', marginBottom: 8 }]}>
         <View style={[styles.petImageContainer, {
           backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
           shadowColor: 'transparent',
@@ -129,7 +130,7 @@ export default function PetScreen() {
         >
           <Image source={petState.img} style={styles.petImage} resizeMode="contain" />
         </View>
-      </Animated.View>
+      </View>
       {/* Estado de ánimo encima del nivel y puntos */}
       <View style={{ alignItems: 'center', marginBottom: 8 }}>
         <View style={{ backgroundColor: palette.card, borderRadius: 14, paddingVertical: 6, paddingHorizontal: 18, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 }}>

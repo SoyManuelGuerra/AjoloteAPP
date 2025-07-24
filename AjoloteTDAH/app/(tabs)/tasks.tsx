@@ -4,14 +4,15 @@ import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
-import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
 import { Svg, Circle, Rect } from 'react-native-svg';
 import { useRef } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
+// Quitar importación de reanimated y AnimatedRect
+// import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
+// import { Svg, Circle, Rect } from 'react-native-svg';
 
 const MOTIVATIONS = [
   '¡Hoy es un gran día para avanzar! 🌞',
@@ -144,11 +145,12 @@ export default function TasksScreen() {
   const circumference = 2 * Math.PI * radius;
   const progressStroke = circumference * (1 - progress);
 
-  const progressAnim = useSharedValue(0);
-  useEffect(() => {
-    progressAnim.value = withTiming(220 * progress, { duration: 600 });
-  }, [progress]);
-  const animatedProps = useAnimatedProps(() => ({ width: progressAnim.value }));
+  // Eliminar lógica de animación
+  // const progressAnim = useSharedValue(0);
+  // useEffect(() => {
+  //   progressAnim.value = withTiming(220 * progress, { duration: 600 });
+  // }, [progress]);
+  // const animatedProps = useAnimatedProps(() => ({ width: progressAnim.value }));
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
@@ -167,12 +169,8 @@ export default function TasksScreen() {
         renderItem={({ item }) => {
           const expanded = expandedTaskId === item.id;
           return (
-            <Animated.View
-              entering={FadeIn.duration(350)}
-              exiting={FadeOut.duration(350)}
-              layout={Layout.springify()}
-              style={[
-                styles.taskItem,
+            <View
+              style={[styles.taskItem,
                 {
                   backgroundColor: isDark ? '#393C43' : '#FFF8F1',
                   borderRadius: 24,
@@ -244,7 +242,7 @@ export default function TasksScreen() {
                   <Ionicons name="trash-outline" size={22} color={isDark ? '#C98F8F' : '#D36A6A'} />
                 </TouchableOpacity>
               </View>
-            </Animated.View>
+            </View>
           );
         }}
         ListEmptyComponent={<Text style={[styles.empty, { color: palette.textSecondary } ]}>¡Sin tareas pendientes! Tu ajolote está feliz 🥳</Text>}
@@ -257,16 +255,17 @@ export default function TasksScreen() {
           { backgroundColor: palette.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, marginBottom: 0, marginTop: 0, width: 240, alignSelf: 'center' }
         ]}>
           <Text style={[styles.evolutionTitle, { color: palette.primary, marginBottom: 2, fontSize: 15 }]}>Evolución diaria</Text>
+          {/* Reemplazar barra animada por barra estática */}
           <View style={{ width: 220, height: 22, marginTop: 2, marginBottom: 2, justifyContent: 'center' }}>
             <Svg width={220} height={22}>
               <Rect x={0} y={0} width={220} height={22} rx={11} fill={isDark ? '#393C43' : '#E7DFD6'} />
-              <AnimatedRect
+              <Rect
                 x={0}
                 y={0}
+                width={220 * progress}
                 height={22}
                 rx={11}
                 fill={palette.primary}
-                animatedProps={animatedProps}
               />
             </Svg>
             <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 22, alignItems: 'center', justifyContent: 'center' }}>
