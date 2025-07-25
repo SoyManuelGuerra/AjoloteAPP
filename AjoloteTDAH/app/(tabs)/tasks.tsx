@@ -1,11 +1,9 @@
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Modal, TextInput, useColorScheme, Alert } from 'react-native';
-import { useState } from 'react';
+import { useState , useEffect , useRef } from 'react';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect } from 'react';
 import { Svg, Circle, Rect } from 'react-native-svg';
-import { useRef } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,7 +25,7 @@ const PRIORITY_OPTIONS = [
   { value: 'medium', label: 'Media' },
   { value: 'low', label: 'Baja' },
 ];
-
+ 
 const initialTasks: Task[] = [
   { id: '1', title: 'Tarea de ejemplo 1', completed: false },
   { id: '2', title: 'Tarea de ejemplo 2', completed: false },
@@ -55,6 +53,9 @@ export default function TasksScreen() {
   const [addPressed, setAddPressed] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [taskPriority, setTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
+  const [menuTaskId, setMenuTaskId] = useState<string | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
@@ -109,14 +110,21 @@ export default function TasksScreen() {
   };
 
   const handleDeleteTask = (id: string) => {
-    Alert.alert(
-      'Eliminar tarea',
-      '¿Estás seguro de que quieres eliminar esta tarea?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => deleteTask(id) }
-      ]
-    );
+    setTaskToDelete(id);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = () => {
+    if (taskToDelete) {
+      deleteTask(taskToDelete);
+      setDeleteModalVisible(false);
+      setTaskToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalVisible(false);
+    setTaskToDelete(null);
   };
 
   // Reemplaza setTasks por las funciones del contexto en agregar, editar, eliminar, completar
@@ -235,13 +243,30 @@ export default function TasksScreen() {
                 </View>
               </View>
               <View style={styles.taskActions}>
-                <TouchableOpacity onPress={() => openEditModal(item)}>
-                  <Ionicons name="pencil-outline" size={22} color={palette.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDeleteTask(item.id)}>
-                  <Ionicons name="trash-outline" size={22} color={isDark ? '#C98F8F' : '#D36A6A'} />
+                <TouchableOpacity onPress={() => setMenuTaskId(item.id)}>
+                  <Text style={{ fontSize: 26, color: palette.textSecondary, fontWeight: 'bold', paddingHorizontal: 2 }}>⋮</Text>
                 </TouchableOpacity>
               </View>
+              {/* Menú modal de opciones */}
+              <Modal
+                visible={menuTaskId === item.id}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setMenuTaskId(null)}
+              >
+                <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMenuTaskId(null)}>
+                  <View style={[styles.menuContainer, { backgroundColor: palette.card }] }>
+                    <TouchableOpacity style={styles.menuOption} onPress={() => { setMenuTaskId(null); openEditModal(item); }}>
+                      <Ionicons name="pencil-outline" size={20} color={palette.primary} style={{ marginRight: 8 }} />
+                      <Text style={{ color: palette.text, fontSize: 16 }}>Editar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuOption} onPress={() => { setMenuTaskId(null); handleDeleteTask(item.id); }}>
+                      <Ionicons name="trash-outline" size={20} color={isDark ? '#C98F8F' : '#D36A6A'} style={{ marginRight: 8 }} />
+                      <Text style={{ color: isDark ? '#C98F8F' : '#D36A6A', fontSize: 16 }}>Eliminar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
             </View>
           );
         }}
@@ -379,6 +404,30 @@ export default function TasksScreen() {
                 <Text style={[styles.modalButtonText, { color: palette.onPrimary } ]}>{editingTask ? 'Guardar' : 'Agregar'}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalButton, { backgroundColor: isDark ? '#333' : '#eee' }]} onPress={() => setModalVisible(false)}>
+                <Text style={[styles.modalButtonText, { color: palette.primary }]}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Modal de confirmación de eliminación */}
+      <Modal
+        visible={deleteModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={cancelDelete}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: palette.card }] }>
+            <Text style={[styles.modalTitle, { color: palette.text } ]}>¿Eliminar esta tarea?</Text>
+            <Text style={[styles.modalText, { color: palette.textSecondary } ]}>
+              No te preocupes, siempre puedes crear una nueva 😅
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: isDark ? '#C98F8F' : '#D36A6A' }]} onPress={confirmDelete}>
+                <Text style={[styles.modalButtonText, { color: '#FFF' } ]}>Eliminar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: isDark ? '#333' : '#eee' }]} onPress={cancelDelete}>
                 <Text style={[styles.modalButtonText, { color: palette.primary }]}>Cancelar</Text>
               </TouchableOpacity>
             </View>
@@ -531,6 +580,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Bold',
     fontSize: 16,
   },
+  modalText: {
+    fontFamily: 'Nunito',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
   checkButton: {
     marginRight: 10,
     alignItems: 'center',
@@ -548,5 +604,31 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito-Bold',
     fontSize: 18,
     marginBottom: 8,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    minWidth: 160,
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    alignItems: 'stretch',
+  },
+  menuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.07)',
   },
 }); 
