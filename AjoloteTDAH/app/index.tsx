@@ -1,8 +1,7 @@
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Animated , useColorScheme } from "react-native";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { LinearGradient } from 'expo-linear-gradient';
-import { useColorScheme } from "react-native";
 import { Colors } from '../constants/Colors';
 
 export default function HomeScreen() {

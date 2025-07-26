@@ -13,9 +13,6 @@ export default function ExploreScreen() {
     : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
   const buttonScale = useRef(new Animated.Value(1)).current;
 
-  // Estado para habilitar el botón
-  const [canContinue, setCanContinue] = useState(false);
-
   // Animación para el título
   const titleScale = useRef(new Animated.Value(0.7)).current;
   useEffect(() => {
@@ -56,13 +53,9 @@ export default function ExploreScreen() {
         }).start();
       });
     });
-    // Habilitar el botón después de 4400ms
-    const timeout = setTimeout(() => setCanContinue(true), 4400);
-    return () => clearTimeout(timeout);
   }, []);
 
   const handleNextPress = () => {
-    if (!canContinue) return;
     Animated.sequence([
       Animated.timing(buttonScale, {
         toValue: 0.95,
@@ -112,12 +105,11 @@ export default function ExploreScreen() {
           🎨 Personalizalo, desbloquea accesorios y crea hábitos.
         </Animated.Text>
       </View>
-      <Animated.View style={{ transform: [{ scale: buttonScale }], marginTop: 40, opacity: canContinue ? 1 : 0.5 }}>
+      <Animated.View style={{ transform: [{ scale: buttonScale }], marginTop: 40, opacity: 1 }}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: palette.primary }]}
           onPress={handleNextPress}
-          activeOpacity={canContinue ? 0.8 : 1}
-          disabled={!canContinue}
+          activeOpacity={0.8}
         >
           <Text style={[styles.buttonText, { color: palette.onPrimary } ]}>Siguiente</Text>
         </TouchableOpacity>
