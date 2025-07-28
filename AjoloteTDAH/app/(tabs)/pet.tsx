@@ -133,7 +133,19 @@ export default function PetScreen() {
       </View>
       {/* Estado de ánimo encima del nivel y puntos */}
       <View style={{ alignItems: 'center', marginBottom: 8 }}>
-        <View style={{ backgroundColor: palette.card, borderRadius: 14, paddingVertical: 6, paddingHorizontal: 18, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 }}>
+        <View style={{ 
+          backgroundColor: palette.cardWarm, 
+          borderRadius: 14, 
+          paddingVertical: 6, 
+          paddingHorizontal: 18, 
+          marginBottom: 8, 
+          shadowColor: isDark ? '#000' : '#B08B5E',
+          shadowOffset: { width: 0, height: 2 }, 
+          shadowOpacity: 0.15, 
+          shadowRadius: 4,
+          borderWidth: 1.5,
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
+        }}>
           <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.primary, textAlign: 'center' }}>{petState.mood} {petState.mood === 'Feliz' ? '😊' : ''}</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -147,7 +159,15 @@ export default function PetScreen() {
       </View>
 
       {/* Barra de evolución */}
-      <View style={[styles.progressBox, { backgroundColor: palette.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 }] }>
+      <View style={[styles.progressBox, { 
+        backgroundColor: palette.cardWarm, 
+        shadowColor: isDark ? '#000' : '#B08B5E',
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.15, 
+        shadowRadius: 4,
+        borderWidth: 1.5,
+        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
+      }] }>
         <Text style={[styles.evolutionTitle, { color: palette.primary }]}>Evolución diaria</Text>
         <View style={{ width: 220, height: 22, marginTop: 8, marginBottom: 4 }}>
           <Svg width={220} height={22}>

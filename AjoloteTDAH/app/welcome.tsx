@@ -80,9 +80,6 @@ export default function ExploreScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
-        <Text style={styles.backButtonText}>←</Text>
-      </TouchableOpacity>
       <Animated.Text
         style={[
           styles.title,

@@ -7,6 +7,8 @@ export const Colors = {
   // Modo claro
   background: '#F6F4EF', // Fondo principal
   card: '#FFFFFF', // Fondo secundario (cards, inputs)
+  cardWarm: '#FFF8F1', // Card con tono cálido para mejor contraste
+  cardAccent: '#F2ECE6', // Card de acento más suave
   text: '#2A3B47', // Texto principal
   textSecondary: '#7D848D', // Texto secundario
   primary: '#6B8F71', // Botón primario (relleno) - VERDE MÁS OSCURO
@@ -22,6 +24,8 @@ export const Colors = {
   dark: {
     background: '#2D2F36', // Fondo principal
     card: '#3A3D45', // Fondo secundario
+    cardWarm: '#393C43', // Card con tono más cálido para mejor contraste
+    cardAccent: '#484C55', // Card de acento más suave
     text: '#F6F4EF', // Texto principal
     textSecondary: '#AEB5BC', // Texto secundario
     primary: '#A8C3B8', // Botón primario (relleno)

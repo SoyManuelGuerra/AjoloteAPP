@@ -71,7 +71,7 @@ export default function ProfileScreen() {
       <Text style={[styles.title, { color: palette.text }]}>Perfil y Configuración</Text>
       {/* Bloque de mascota/perfil */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Tu Ajolote</Text>
-      <View style={[styles.profileBox, { backgroundColor: palette.card }] }>
+      <View style={[styles.profileBox, { backgroundColor: palette.cardWarm }] }>
         <Image source={require('../../assets/images/axofi-logo-v1.png')} style={styles.avatar} />
         <Text style={[styles.petName, { color: palette.text }]}>{petName}</Text>
         <View style={styles.levelRow}>
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
       </View>
       {/* Sección de cuenta */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Cuenta</Text>
-      <View style={[styles.accountSection, { backgroundColor: palette.card }] }>
+      <View style={[styles.accountSection, { backgroundColor: palette.cardWarm }] }>
         <Text style={[styles.sectionTitle, { color: palette.text, marginBottom: 14 }]}>Datos de cuenta</Text>
         <TextInput
           style={[
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
       </View>
       {/* Sección de notificaciones */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Notificaciones</Text>
-      <View style={[styles.section, { backgroundColor: palette.card }] }>
+      <View style={[styles.section, { backgroundColor: palette.cardWarm }] }>
         <Text style={[styles.sectionTitle, { color: palette.text }]}>Notificaciones</Text>
         <View style={styles.row}>
           <Text style={{ color: palette.text }}>Activar notificaciones</Text>
@@ -147,7 +147,7 @@ export default function ProfileScreen() {
       </View>
       {/* Sección de preferencias */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Preferencias</Text>
-      <View style={[styles.section, { backgroundColor: palette.card }] }>
+      <View style={[styles.section, { backgroundColor: palette.cardWarm }] }>
         <Text style={[styles.sectionTitle, { color: palette.text }]}>Preferencias</Text>
         <View style={styles.row}>
           <Text style={{ color: palette.text }}>Tema oscuro</Text>
@@ -197,7 +197,7 @@ export default function ProfileScreen() {
       </View>
       {/* Sección avanzada */}
       <Text style={[styles.groupTitle, { color: palette.text }]}>Avanzado</Text>
-      <View style={[styles.section, { backgroundColor: palette.card }] }>
+      <View style={[styles.section, { backgroundColor: palette.cardWarm }] }>
         <Text style={[styles.sectionTitle, { color: palette.text }]}>Progreso</Text>
         <TouchableOpacity
           style={[

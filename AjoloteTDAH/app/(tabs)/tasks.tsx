@@ -180,7 +180,7 @@ export default function TasksScreen() {
             <View
               style={[styles.taskItem,
                 {
-                  backgroundColor: isDark ? '#393C43' : '#FFF8F1',
+                  backgroundColor: palette.cardWarm,
                   borderRadius: 24,
                   shadowColor: isDark ? '#000' : '#B08B5E', // sombra más cálida en claro
                   shadowOffset: { width: 0, height: 8 },
@@ -255,7 +255,7 @@ export default function TasksScreen() {
                 onRequestClose={() => setMenuTaskId(null)}
               >
                 <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMenuTaskId(null)}>
-                  <View style={[styles.menuContainer, { backgroundColor: palette.card }] }>
+                  <View style={[styles.menuContainer, { backgroundColor: palette.cardWarm }] }>
                     <TouchableOpacity style={styles.menuOption} onPress={() => { setMenuTaskId(null); openEditModal(item); }}>
                       <Ionicons name="pencil-outline" size={20} color={palette.primary} style={{ marginRight: 8 }} />
                       <Text style={{ color: palette.text, fontSize: 16 }}>Editar</Text>
@@ -277,13 +277,25 @@ export default function TasksScreen() {
       <View style={{ alignItems: 'center', width: '100%', marginTop: 32, marginBottom: 8 }}>
         <View style={[
           styles.progressBox,
-          { backgroundColor: palette.card, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, marginBottom: 0, marginTop: 0, width: 240, alignSelf: 'center' }
+          { 
+            backgroundColor: palette.cardWarm, 
+            shadowColor: isDark ? '#000' : '#B08B5E',
+            shadowOffset: { width: 0, height: 4 }, 
+            shadowOpacity: 0.15, 
+            shadowRadius: 8, 
+            marginBottom: 0, 
+            marginTop: 0, 
+            width: 240, 
+            alignSelf: 'center',
+            borderWidth: 1.5,
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
+          }
         ]}>
           <Text style={[styles.evolutionTitle, { color: palette.primary, marginBottom: 2, fontSize: 15 }]}>Evolución diaria</Text>
           {/* Reemplazar barra animada por barra estática */}
           <View style={{ width: 220, height: 22, marginTop: 2, marginBottom: 2, justifyContent: 'center' }}>
             <Svg width={220} height={22}>
-              <Rect x={0} y={0} width={220} height={22} rx={11} fill={isDark ? '#393C43' : '#E7DFD6'} />
+              <Rect x={0} y={0} width={220} height={22} rx={11} fill={palette.cardAccent} />
               <Rect
                 x={0}
                 y={0}
@@ -326,7 +338,7 @@ export default function TasksScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: palette.card }] }>
+          <View style={[styles.modalContent, { backgroundColor: palette.cardWarm }] }>
             <Text style={[styles.modalTitle, { color: palette.text } ]}>{editingTask ? 'Editar tarea' : 'Nueva tarea'}</Text>
             <TextInput
               style={[styles.modalInput, { backgroundColor: palette.background, color: palette.text, borderColor: palette.accent }]}
@@ -418,7 +430,7 @@ export default function TasksScreen() {
         onRequestClose={cancelDelete}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: palette.card }] }>
+          <View style={[styles.modalContent, { backgroundColor: palette.cardWarm }] }>
             <Text style={[styles.modalTitle, { color: palette.text } ]}>¿Eliminar esta tarea?</Text>
             <Text style={[styles.modalText, { color: palette.textSecondary } ]}>
               No te preocupes, siempre puedes crear una nueva 😅

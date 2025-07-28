@@ -131,7 +131,7 @@ export default function RewardsScreen() {
         style={[
           styles.rewardItem, 
           { 
-            backgroundColor: palette.card,
+            backgroundColor: palette.cardWarm,
             transform: [{ scale: scaleAnim }]
           }
         ]}
@@ -193,7 +193,7 @@ export default function RewardsScreen() {
           </Text>
         </View>
         
-        <View style={[styles.progressBar, { backgroundColor: palette.card }]}>
+        <View style={[styles.progressBar, { backgroundColor: palette.cardAccent }]}>
           <Animated.View 
             style={[
               styles.progressFill, 
@@ -225,7 +225,7 @@ export default function RewardsScreen() {
               style={[
                 styles.categoryButton,
                 { 
-                  backgroundColor: selectedCategory === index ? palette.primary : palette.card,
+                  backgroundColor: selectedCategory === index ? palette.primary : palette.cardWarm,
                 }
               ]}
               onPress={() => setSelectedCategory(index)}

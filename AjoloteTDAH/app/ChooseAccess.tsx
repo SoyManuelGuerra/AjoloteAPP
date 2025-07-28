@@ -37,9 +37,6 @@ export default function ChooseAccess() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/welcome')}>
-        <Text style={styles.backButtonText}>←</Text>
-      </TouchableOpacity>
       <Animated.Text
         style={[
           styles.title,
@@ -67,7 +64,7 @@ export default function ChooseAccess() {
           onPress={() => router.replace('/(tabs)/tasks')}
           activeOpacity={0.8}
         >
-          <Text style={[styles.optionButtonText, { color: palette.onPrimary }]}>Continuar como invitado</Text>
+          <Text style={[styles.optionButtonText, { color: palette.onPrimary }]}>Modo invitado</Text>
         </TouchableOpacity>
       </View>
     </View>
