@@ -7,6 +7,7 @@ import { Svg, Circle, Rect } from 'react-native-svg';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 // Quitar importación de reanimated y AnimatedRect
 // import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
@@ -56,6 +57,8 @@ export default function TasksScreen() {
   const [menuTaskId, setMenuTaskId] = useState<string | null>(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const params = useLocalSearchParams();
+  const router = useRouter();
 
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
@@ -65,6 +68,16 @@ export default function TasksScreen() {
     : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
 
   const TASKS_KEY = 'ajolote_tasks';
+
+  // Abrir modal automáticamente si se recibe el parámetro
+  useEffect(() => {
+    if (params.openModal === 'true') {
+      // Abrir modal directamente sin delay
+      openAddModal();
+      // Resetear el parámetro para que pueda detectar cambios futuros
+      router.setParams({ openModal: 'false' });
+    }
+  }, [params.openModal]);
 
   // Elimina el estado local de tasks y toda la lógica de persistencia
   // useEffect(() => {
@@ -181,12 +194,12 @@ export default function TasksScreen() {
               style={[styles.taskItem,
                 {
                   backgroundColor: palette.cardWarm,
-                  borderRadius: 24,
-                  shadowColor: isDark ? '#000' : '#B08B5E', // sombra más cálida en claro
-                  shadowOffset: { width: 0, height: 8 },
-                  shadowOpacity: 0.18,
-                  shadowRadius: 18,
-                  elevation: 8,
+                  borderRadius: 32, // Más redondeado para efecto de tarjeta de misión
+                  shadowColor: isDark ? '#000' : '#B08B5E',
+                  shadowOffset: { width: 0, height: 12 }, // Sombra más pronunciada
+                  shadowOpacity: 0.25, // Mayor opacidad para efecto de elevación
+                  shadowRadius: 24, // Radio de sombra más amplio
+                  elevation: 12, // Elevación más alta para Android
                   borderWidth: 1.5,
                   borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.18)',
                 }
@@ -207,7 +220,7 @@ export default function TasksScreen() {
                       { color: palette.text },
                       item.completed && { textDecorationLine: 'line-through', color: '#999', opacity: 1 }
                     ]}
-                    numberOfLines={expanded ? undefined : 2}
+                    numberOfLines={expanded ? undefined : 1}
                     ellipsizeMode="tail"
                   >
                     {item.title}
@@ -274,63 +287,9 @@ export default function TasksScreen() {
         style={{ width: '100%' }}
         contentContainerStyle={{ paddingBottom: 220 }}
       />
-      <View style={{ alignItems: 'center', width: '100%', marginTop: 32, marginBottom: 8 }}>
-        <View style={[
-          styles.progressBox,
-          { 
-            backgroundColor: palette.cardWarm, 
-            shadowColor: isDark ? '#000' : '#B08B5E',
-            shadowOffset: { width: 0, height: 4 }, 
-            shadowOpacity: 0.15, 
-            shadowRadius: 8, 
-            marginBottom: 0, 
-            marginTop: 0, 
-            width: 240, 
-            alignSelf: 'center',
-            borderWidth: 1.5,
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
-          }
-        ]}>
-          <Text style={[styles.evolutionTitle, { color: palette.primary, marginBottom: 2, fontSize: 15 }]}>Evolución diaria</Text>
-          {/* Reemplazar barra animada por barra estática */}
-          <View style={{ width: 220, height: 22, marginTop: 2, marginBottom: 2, justifyContent: 'center' }}>
-            <Svg width={220} height={22}>
-              <Rect x={0} y={0} width={220} height={22} rx={11} fill={palette.cardAccent} />
-              <Rect
-                x={0}
-                y={0}
-                width={220 * progress}
-                height={22}
-                rx={11}
-                fill={palette.primary}
-              />
-            </Svg>
-            <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: palette.text, fontWeight: 'bold', fontSize: 13 }}>{`${completedCount}/${totalCount} tareas`}</Text>
-            </View>
-          </View>
-        </View>
-      </View>
       <View style={{ alignItems: 'center', marginTop: 32, marginBottom: 8 }}>
         <Text style={[styles.motivation, { color: palette.primary } ]}>{motivation}</Text>
       </View>
-      <TouchableOpacity
-        style={[
-          styles.addButton,
-          {
-            backgroundColor: addPressed
-              ? (isDark ? '#7CA49A' : '#C4D6CE')
-              : palette.primary
-          }
-        ]}
-        onPress={openAddModal}
-        onPressIn={() => setAddPressed(true)}
-        onPressOut={() => setAddPressed(false)}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="add" size={32} color={palette.onPrimary} />
-        <Text style={[styles.addButtonText, { color: palette.onPrimary } ]}>Agregar tarea</Text>
-      </TouchableOpacity>
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -466,18 +425,19 @@ const styles = StyleSheet.create({
   },
   taskItem: {
     backgroundColor: Colors.card,
-    borderRadius: 24,
+    borderRadius: 32, // Más redondeado para efecto de tarjeta de misión
     padding: 20,
-    marginBottom: 20,
+    marginBottom: 12, // Reducido de 20 a 12 para menos espacio entre tareas
     marginTop: 10,
     marginHorizontal: 0,
     width: '100%',
     maxWidth: 400,
     alignSelf: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 12 }, // Sombra más pronunciada
+    shadowOpacity: 0.25, // Mayor opacidad para efecto de elevación
+    shadowRadius: 24, // Radio de sombra más amplio
+    elevation: 12, // Elevación más alta para Android
     borderWidth: 1.5,
     borderColor: 'rgba(120,120,120,0.08)',
     flexDirection: 'row',
@@ -518,25 +478,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textAlign: 'center',
     marginBottom: 24,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    borderRadius: 24,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  addButtonText: {
-    color: Colors.onPrimary,
-    fontFamily: 'Nunito-Bold',
-    fontSize: 18,
-    marginLeft: 10,
   },
   modalOverlay: {
     flex: 1,

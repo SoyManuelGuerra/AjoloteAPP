@@ -169,13 +169,26 @@ export default function PetScreen() {
         borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
       }] }>
         <Text style={[styles.evolutionTitle, { color: palette.primary }]}>Evolución diaria</Text>
-        <View style={{ width: 220, height: 22, marginTop: 8, marginBottom: 4 }}>
-          <Svg width={220} height={22}>
-            <Rect x={0} y={0} width={220} height={22} rx={11} fill={isDark ? '#393C43' : '#E7DFD6'} />
-            <Rect x={0} y={0} width={220 * progress} height={22} rx={11} fill={palette.primary} />
+        {/* Barra de progreso visual */}
+        <View style={{ width: 220, height: 24, marginTop: 8, marginBottom: 4, justifyContent: 'center', position: 'relative' }}>
+          {/* Fondo de la barra */}
+          <Svg width={220} height={24}>
+            <Rect x={0} y={0} width={220} height={24} rx={12} fill={palette.cardAccent} />
+            {/* Barra de progreso */}
+            <Rect
+              x={0}
+              y={0}
+              width={220 * progress}
+              height={24}
+              rx={12}
+              fill={palette.primary}
+            />
           </Svg>
-          <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: palette.text, fontWeight: 'bold', fontSize: 13 }}>{`${completedCount}/${totalCount} tareas`}</Text>
+          {/* Texto de progreso centrado */}
+          <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: palette.text, fontWeight: 'bold', fontSize: 13 }}>
+              {`${completedCount}/${totalCount}`}
+            </Text>
           </View>
         </View>
       </View>

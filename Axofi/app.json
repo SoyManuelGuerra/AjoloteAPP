@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "AjoloteTDAH",
-    "slug": "AjoloteTDAH",
+    "name": "Axofi",
+    "slug": "axofi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "ajolotetdah",
+    "scheme": "axofi",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
