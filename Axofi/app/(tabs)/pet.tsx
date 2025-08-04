@@ -11,7 +11,7 @@ import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const PET_STATES = [
-  { mood: 'Feliz', message: '¡Tu ajolote está feliz y motivado! 🎉', img: require('../../assets/images/axofi-logo-v1.png') },
+  { mood: 'Feliz', message: '¡Tu ajolote está feliz y motivado! 🎉', img: require('../../assets/images/axofi_feliz_app.png') },
   // Aquí podrías agregar más estados y evoluciones
 ];
 
@@ -215,19 +215,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: '4%',
   },
   title: {
     fontFamily: 'Nunito-Bold',
     fontSize: 32,
-    marginBottom: 16,
+    marginBottom: '2%',
     letterSpacing: 1.1,
   },
   petImageContainer: {
     backgroundColor: '#fff',
     borderRadius: 100,
     padding: 18,
-    marginBottom: 12,
+    marginBottom: '1.5%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.10,
@@ -241,20 +241,20 @@ const styles = StyleSheet.create({
   mood: {
     fontFamily: 'Nunito-Bold',
     fontSize: 22,
-    marginBottom: 6,
+    marginBottom: '0.8%',
   },
   message: {
     fontFamily: 'Nunito',
     fontSize: 16,
-    marginBottom: 24,
+    marginBottom: '3%',
     textAlign: 'center',
     maxWidth: 320,
   },
   evolutionBox: {
     backgroundColor: '#F5F5F7',
     borderRadius: 18,
-    padding: 18,
-    marginTop: 18,
+    padding: '2.2%',
+    marginTop: '2.2%',
     alignItems: 'center',
     width: '100%',
     maxWidth: 340,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   evolutionTitle: {
     fontFamily: 'Nunito-Bold',
     fontSize: 18,
-    marginBottom: 6,
+    marginBottom: '0.8%',
   },
   evolutionText: {
     fontFamily: 'Nunito',
@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
   progressBox: {
     backgroundColor: Colors.card,
     borderRadius: 18,
-    padding: 18,
-    marginTop: 18,
+    padding: '2.2%',
+    marginTop: '2.2%',
     alignItems: 'center',
     width: '100%',
     maxWidth: 340,

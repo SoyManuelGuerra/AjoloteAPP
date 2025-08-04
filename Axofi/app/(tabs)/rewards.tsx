@@ -10,7 +10,7 @@ const { width: screenWidth } = Dimensions.get('window');
 // Configuración de niveles
 const LEVELS = [0, 100, 250, 500, 1000];
 
-// Accesorios agrupados por categorías
+// Accesorios simplificados - solo los más importantes
 const REWARD_CATEGORIES = [
   {
     id: 'hats',
@@ -19,7 +19,6 @@ const REWARD_CATEGORIES = [
     accessories: [
       { id: 'hat', name: 'Gorro', cost: 50, icon: '🎩' },
       { id: 'crown', name: 'Corona', cost: 200, icon: '👑' },
-      { id: 'cap', name: 'Gorra', cost: 75, icon: '🧢' },
     ]
   },
   {
@@ -29,18 +28,6 @@ const REWARD_CATEGORIES = [
     accessories: [
       { id: 'glasses', name: 'Gafas', cost: 80, icon: '👓' },
       { id: 'bowtie', name: 'Moño', cost: 110, icon: '🎀' },
-      { id: 'mustache', name: 'Bigote', cost: 70, icon: '🧔' },
-      { id: 'earrings', name: 'Aretes', cost: 60, icon: '💎' },
-    ]
-  },
-  {
-    id: 'clothing',
-    name: 'Ropa',
-    icon: '👕',
-    accessories: [
-      { id: 'scarf', name: 'Bufanda', cost: 90, icon: '🧣' },
-      { id: 'cape', name: 'Capa', cost: 150, icon: '🦸' },
-      { id: 'backpack', name: 'Mochila', cost: 100, icon: '🎒' },
     ]
   },
   {
@@ -49,7 +36,6 @@ const REWARD_CATEGORIES = [
     icon: '⭐',
     accessories: [
       { id: 'color', name: 'Color especial', cost: 120, icon: '🌈' },
-      { id: 'sparkle', name: 'Brillo', cost: 180, icon: '✨' },
     ]
   }
 ];
@@ -66,8 +52,6 @@ export default function RewardsScreen() {
   const { points, setPoints } = usePoints();
   const [unlocked, setUnlocked] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(0);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
 
   // Leer accesorios desbloqueados al montar
   useEffect(() => {
@@ -91,32 +75,11 @@ export default function RewardsScreen() {
   const prevLevelPoints = LEVELS[level - 1] || 0;
   const progress = Math.min((points - prevLevelPoints) / (nextLevelPoints - prevLevelPoints), 1);
 
-  // Animar progreso
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: progress,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-  }, [progress]);
 
-  // Manejar desbloqueo de accesorio con animación
+
+  // Manejar desbloqueo de accesorio
   const handleUnlock = (id: string, cost: number) => {
     if (points >= cost && !unlocked.includes(id)) {
-      // Animación de escala
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
       setUnlocked([...unlocked, id]);
       setPoints(points - cost);
     }
@@ -127,13 +90,10 @@ export default function RewardsScreen() {
     const canAfford = points >= item.cost;
     
     return (
-      <Animated.View 
+      <View 
         style={[
           styles.rewardItem, 
-          { 
-            backgroundColor: palette.cardWarm,
-            transform: [{ scale: scaleAnim }]
-          }
+          { backgroundColor: palette.cardWarm }
         ]}
       >
         <Text style={styles.rewardIcon}>{item.icon}</Text>
@@ -148,7 +108,7 @@ export default function RewardsScreen() {
               backgroundColor: isUnlocked 
                 ? palette.primary 
                 : canAfford 
-                  ? '#4CAF50' 
+                  ? palette.primary 
                   : '#A89CC8'
             }
           ]}
@@ -156,10 +116,10 @@ export default function RewardsScreen() {
           onPress={() => handleUnlock(item.id, item.cost)}
         >
           <Text style={[styles.unlockText, { color: palette.onPrimary }]}>
-            {isUnlocked ? '✅ Desbloqueado' : '🔓 Desbloquear'}
+            {isUnlocked ? 'Desbloqueado' : 'Desbloquear'}
           </Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   };
 
@@ -174,40 +134,19 @@ export default function RewardsScreen() {
         end={{ x: 0.5, y: 1 }}
       />
       
-      {/* Header */}
+      {/* Header simplificado */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: palette.text }]}>Recompensas</Text>
         <Text style={[styles.pointsText, { color: palette.primary }]}>
-          💎 {points} puntos
+          {points} puntos
         </Text>
       </View>
 
-      {/* Barra de progreso mejorada */}
+      {/* Progreso simplificado */}
       <View style={styles.levelContainer}>
-        <View style={styles.levelHeader}>
-          <Text style={[styles.levelText, { color: palette.text }]}>
-            Nivel {level} {getLevelIcon(level)}
-          </Text>
-          <Text style={[styles.nextLevelText, { color: palette.textSecondary }]}>
-            Siguiente: {nextLevelPoints} pts
-          </Text>
-        </View>
-        
-        <View style={[styles.progressBar, { backgroundColor: palette.cardAccent }]}>
-          <Animated.View 
-            style={[
-              styles.progressFill, 
-              { 
-                width: progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0%', '100%'],
-                }),
-                backgroundColor: palette.primary 
-              }
-            ]} 
-          />
-        </View>
-        
+        <Text style={[styles.levelText, { color: palette.text }]}>
+          Nivel {level}
+        </Text>
         <Text style={[styles.progressText, { color: palette.textSecondary }]}>
           {points} / {nextLevelPoints} puntos
         </Text>
@@ -252,7 +191,7 @@ export default function RewardsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderRewardItem}
           contentContainerStyle={styles.rewardsList}
-          snapToInterval={screenWidth * 0.35 + 20}
+          snapToInterval={screenWidth * 0.4 + 20}
           decelerationRate="fast"
         />
       </View>
@@ -271,13 +210,13 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: '2%',
     paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 8,
   },
   title: {
     fontFamily: 'Nunito-Bold',
     fontSize: 28,
-    marginBottom: 8,
+    marginBottom: '1%',
   },
   pointsText: {
     fontSize: 20,
@@ -285,55 +224,35 @@ const styles = StyleSheet.create({
   },
   levelContainer: {
     alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  levelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 8,
+    marginBottom: '3%',
   },
   levelText: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  nextLevelText: {
-    fontSize: 14,
-  },
-  progressBar: {
-    width: '100%',
-    height: 20,
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginVertical: 8,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 10,
+    marginBottom: '1%',
   },
   progressText: {
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 14,
+    color: '#666',
   },
   categoryContainer: {
-    marginBottom: 16,
+    marginBottom: '2%',
   },
   categoryList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: '2.5%',
   },
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: '2%',
+    paddingVertical: '1%',
     borderRadius: 20,
-    marginRight: 12,
+    marginRight: '1.5%',
     minWidth: 100,
   },
   categoryIcon: {
     fontSize: 16,
-    marginRight: 6,
+    marginRight: '0.8%',
   },
   categoryText: {
     fontSize: 14,
@@ -341,46 +260,46 @@ const styles = StyleSheet.create({
   },
   rewardsContainer: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: '2.5%',
+    paddingBottom: '2.5%',
   },
   rewardsList: {
-    paddingHorizontal: 10,
+    paddingHorizontal: '1.2%',
   },
   rewardItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    borderRadius: 20,
-    marginHorizontal: 10,
-    width: screenWidth * 0.35,
-    minHeight: 140,
+    padding: '3%',
+    borderRadius: 16,
+    marginHorizontal: '2%',
+    width: screenWidth * 0.4,
+    minHeight: 120,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   rewardIcon: {
-    fontSize: 40,
-    marginBottom: 8,
+    fontSize: 32,
+    marginBottom: '2%',
   },
   rewardName: {
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: '0.8%',
   },
   rewardCost: {
     fontSize: 12,
-    marginBottom: 8,
+    marginBottom: '1%',
   },
   unlockButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 15,
+    paddingVertical: '2%',
+    paddingHorizontal: '3%',
+    borderRadius: 12,
     alignItems: 'center',
-    minWidth: 100,
+    minWidth: 80,
   },
   unlockText: {
     fontWeight: 'bold',

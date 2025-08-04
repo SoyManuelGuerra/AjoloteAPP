@@ -111,7 +111,8 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -15, // Reducido de -20 a -15 para ajustar a la nueva altura
+    marginTop: '-20%', // Cambiado a porcentaje para mejor responsividad
+    alignSelf: 'center', // Centra el botón horizontalmente
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

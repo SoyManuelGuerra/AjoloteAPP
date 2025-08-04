@@ -57,6 +57,7 @@ export default function TasksScreen() {
   const [menuTaskId, setMenuTaskId] = useState<string | null>(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
   const params = useLocalSearchParams();
   const router = useRouter();
 
@@ -183,6 +184,12 @@ export default function TasksScreen() {
       />
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 48, marginBottom: 8 }}>
         <Text style={[styles.title, { color: palette.text, marginTop: 0, marginBottom: 0 }]}>Tareas de hoy</Text>
+        <TouchableOpacity 
+          style={{ marginLeft: 8, padding: 4 }}
+          onPress={() => setHelpModalVisible(true)}
+        >
+          <Ionicons name="information-circle-outline" size={20} color={palette.textSecondary} />
+        </TouchableOpacity>
       </View>
       <FlatList
         data={sortTasksByPriority(tasks)}
@@ -205,7 +212,13 @@ export default function TasksScreen() {
                 }
               ]}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginBottom: 4 }}>
+              <TouchableOpacity 
+                onPress={() => setExpandedTaskId(expanded ? null : item.id)}
+                onLongPress={() => setMenuTaskId(item.id)}
+                style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}
+                activeOpacity={0.7}
+                delayLongPress={500}
+              >
                 <TouchableOpacity onPress={() => handleToggleCompleteTask(item.id)} style={styles.checkButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Ionicons
                     name={item.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
@@ -213,7 +226,7 @@ export default function TasksScreen() {
                     color={item.completed ? palette.primary : palette.textSecondary}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setExpandedTaskId(expanded ? null : item.id)} style={{ flex: 1 }} activeOpacity={0.85}>
+                <View style={{ flex: 1, marginLeft: 8 }}>
                   <Text
                     style={[
                       styles.taskText,
@@ -225,41 +238,36 @@ export default function TasksScreen() {
                   >
                     {item.title}
                   </Text>
-                </TouchableOpacity>
-                <View style={{ marginLeft: 8 }}>
-                  <View style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 12,
-                    backgroundColor:
-                      item.priority === 'high' ? 'rgba(255, 99, 71, 0.18)'
-                      : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.18)'
-                      : 'rgba(72, 199, 142, 0.18)',
-                    borderWidth: 1.5,
-                    borderColor:
-                      item.priority === 'high' ? 'rgba(255, 99, 71, 0.5)'
-                      : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.5)'
-                      : 'rgba(72, 199, 142, 0.5)',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                    <Text style={{
-                      color:
-                        item.priority === 'high' ? 'rgba(255, 99, 71, 0.95)'
-                        : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.95)'
-                        : 'rgba(72, 199, 142, 0.95)',
-                      fontWeight: 'bold',
-                      fontSize: 16,
-                      lineHeight: 20,
-                    }}>!</Text>
-                  </View>
                 </View>
-              </View>
-              <View style={styles.taskActions}>
-                <TouchableOpacity onPress={() => setMenuTaskId(item.id)}>
-                  <Text style={{ fontSize: 26, color: palette.textSecondary, fontWeight: 'bold', paddingHorizontal: 2 }}>⋮</Text>
-                </TouchableOpacity>
-              </View>
+                                  <View style={{ marginLeft: 8 }}>
+                    <View style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      backgroundColor:
+                        item.priority === 'high' ? 'rgba(255, 99, 71, 0.18)'
+                        : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.18)'
+                        : 'rgba(72, 199, 142, 0.18)',
+                      borderWidth: 1.5,
+                      borderColor:
+                        item.priority === 'high' ? 'rgba(255, 99, 71, 0.5)'
+                        : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.5)'
+                        : 'rgba(72, 199, 142, 0.5)',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                      <Text style={{
+                        color:
+                          item.priority === 'high' ? 'rgba(255, 99, 71, 0.95)'
+                          : item.priority === 'medium' ? 'rgba(255, 205, 86, 0.95)'
+                          : 'rgba(72, 199, 142, 0.95)',
+                        fontWeight: 'bold',
+                        fontSize: 16,
+                        lineHeight: 20,
+                      }}>!</Text>
+                    </View>
+                  </View>
+              </TouchableOpacity>
               {/* Menú modal de opciones */}
               <Modal
                 visible={menuTaskId === item.id}
@@ -269,13 +277,14 @@ export default function TasksScreen() {
               >
                 <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMenuTaskId(null)}>
                   <View style={[styles.menuContainer, { backgroundColor: palette.cardWarm }] }>
+                    <Text style={[styles.menuTitle, { color: palette.text }]}>Opciones de tarea</Text>
                     <TouchableOpacity style={styles.menuOption} onPress={() => { setMenuTaskId(null); openEditModal(item); }}>
-                      <Ionicons name="pencil-outline" size={20} color={palette.primary} style={{ marginRight: 8 }} />
-                      <Text style={{ color: palette.text, fontSize: 16 }}>Editar</Text>
+                      <Ionicons name="pencil-outline" size={24} color={palette.primary} style={{ marginRight: 12 }} />
+                      <Text style={{ color: palette.text, fontSize: 18, fontWeight: '500' }}>Editar tarea</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.menuOption} onPress={() => { setMenuTaskId(null); handleDeleteTask(item.id); }}>
-                      <Ionicons name="trash-outline" size={20} color={isDark ? '#C98F8F' : '#D36A6A'} style={{ marginRight: 8 }} />
-                      <Text style={{ color: isDark ? '#C98F8F' : '#D36A6A', fontSize: 16 }}>Eliminar</Text>
+                      <Ionicons name="trash-outline" size={24} color={isDark ? '#C98F8F' : '#D36A6A'} style={{ marginRight: 12 }} />
+                      <Text style={{ color: isDark ? '#C98F8F' : '#D36A6A', fontSize: 18, fontWeight: '500' }}>Eliminar tarea</Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
@@ -405,6 +414,40 @@ export default function TasksScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de ayuda */}
+      <Modal
+        visible={helpModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setHelpModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: palette.cardWarm }]}>
+            <Text style={[styles.modalTitle, { color: palette.text }]}>Consejos de uso</Text>
+            <View style={styles.helpContent}>
+              <View style={styles.helpItem}>
+                <Ionicons name="hand-left-outline" size={24} color={palette.primary} style={styles.helpIcon} />
+                <Text style={[styles.helpText, { color: palette.text }]}>
+                  Toca una tarea para expandir o contraer el texto
+                </Text>
+              </View>
+              <View style={styles.helpItem}>
+                <Ionicons name="time-outline" size={24} color={palette.primary} style={styles.helpIcon} />
+                <Text style={[styles.helpText, { color: palette.text }]}>
+                  Mantén presionada para editar o eliminar la tarea
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity 
+              style={[styles.modalButton, { backgroundColor: palette.primary }]} 
+              onPress={() => setHelpModalVisible(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>Entendido</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -419,16 +462,16 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'Nunito-Bold',
     fontSize: 28,
-    marginTop: 24,
-    marginBottom: 16,
+    marginTop: '3%',
+    marginBottom: '2%',
     color: Colors.text,
   },
   taskItem: {
     backgroundColor: Colors.card,
     borderRadius: 32, // Más redondeado para efecto de tarjeta de misión
-    padding: 20,
-    marginBottom: 12, // Reducido de 20 a 12 para menos espacio entre tareas
-    marginTop: 10,
+    padding: '2.5%',
+    marginBottom: '1.5%', // Cambiado a porcentaje para mejor adaptabilidad
+    marginTop: '1.2%',
     marginHorizontal: 0,
     width: '100%',
     maxWidth: 400,
@@ -451,33 +494,29 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
   },
-  taskActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginLeft: 12,
-  },
+
   empty: {
     color: Colors.textSecondary,
     fontSize: 16,
     textAlign: 'center',
-    marginVertical: 32,
+    marginVertical: '4%',
   },
   ajoloteContainer: {
-    marginVertical: 32,
+    marginVertical: '4%',
     alignItems: 'center',
     justifyContent: 'center',
   },
   ajoloteImage: {
-    width: 140,
-    height: 140,
-    marginBottom: 8,
+    width: '18%',
+    height: '18%',
+    marginBottom: '1%',
   },
   motivation: {
     fontFamily: 'Nunito',
     fontSize: 18,
     color: Colors.primary,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: '3%',
   },
   modalOverlay: {
     flex: 1,
@@ -565,23 +604,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   menuContainer: {
-    minWidth: 160,
-    borderRadius: 18,
-    paddingVertical: 8,
+    minWidth: 280,
+    borderRadius: 20,
+    paddingVertical: 16,
     paddingHorizontal: 0,
-    elevation: 8,
+    elevation: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
     alignItems: 'stretch',
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 20,
   },
   menuOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 22,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.07)',
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  helpContent: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  helpItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  helpIcon: {
+    marginRight: 12,
+  },
+  helpText: {
+    fontSize: 16,
+    lineHeight: 22,
+    flex: 1,
   },
 }); 
