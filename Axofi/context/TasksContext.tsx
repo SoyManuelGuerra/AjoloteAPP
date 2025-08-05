@@ -6,14 +6,20 @@ export type Task = {
   title: string;
   completed?: boolean;
   priority?: 'high' | 'medium' | 'low';
+  dueDate?: string; // Fecha de vencimiento
+  completedAt?: string; // Fecha cuando se completó
 };
 
 interface TasksContextType {
   tasks: Task[];
-  addTask: (title: string, priority?: 'high' | 'medium' | 'low') => void;
-  editTask: (id: string, title: string, priority?: 'high' | 'medium' | 'low') => void;
+  completedTasks: Task[];
+  addTask: (title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => void;
+  editTask: (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => void;
   deleteTask: (id: string) => void;
   toggleCompleteTask: (id: string) => void;
+  moveToCompleted: (id: string) => void;
+  restoreTask: (id: string) => void;
+  deleteCompletedTask: (id: string) => void;
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   petName: string;
   setPetName: (name: string) => void;
@@ -21,22 +27,31 @@ interface TasksContextType {
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
 const TASKS_KEY = 'ajolote_tasks';
+const COMPLETED_TASKS_KEY = 'ajolote_completed_tasks';
 const PET_NAME_KEY = 'ajolote_name';
 
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [petName, setPetNameState] = useState('Axofi');
 
   useEffect(() => {
     (async () => {
       const saved = await AsyncStorage.getItem(TASKS_KEY);
       if (saved) setTasks(JSON.parse(saved));
+      
+      const savedCompleted = await AsyncStorage.getItem(COMPLETED_TASKS_KEY);
+      if (savedCompleted) setCompletedTasks(JSON.parse(savedCompleted));
     })();
   }, []);
 
   useEffect(() => {
     AsyncStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(completedTasks));
+  }, [completedTasks]);
 
   // Cargar nombre
   useEffect(() => {
@@ -51,21 +66,67 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [petName]);
   const setPetName = (name: string) => setPetNameState(name);
 
-  const addTask = (title: string, priority: 'high' | 'medium' | 'low' = 'medium') => {
-    setTasks(prev => [...prev, { id: Date.now().toString(), title, completed: false, priority }]);
+  const addTask = (title: string, priority: 'high' | 'medium' | 'low' = 'medium', dueDate?: string) => {
+    setTasks(prev => [...prev, { id: Date.now().toString(), title, completed: false, priority, dueDate }]);
   };
-  const editTask = (id: string, title: string, priority: 'high' | 'medium' | 'low' = 'medium') => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, title, priority } : t));
+  
+  const editTask = (id: string, title: string, priority: 'high' | 'medium' | 'low' = 'medium', dueDate?: string) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, title, priority, dueDate } : t));
   };
+  
   const deleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
   };
+  
   const toggleCompleteTask = (id: string) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
   };
 
+  const moveToCompleted = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      const completedTask = {
+        ...task,
+        completed: true,
+        completedAt: new Date().toISOString()
+      };
+      setCompletedTasks(prev => [...prev, completedTask]);
+      setTasks(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
+  const restoreTask = (id: string) => {
+    const completedTask = completedTasks.find(t => t.id === id);
+    if (completedTask) {
+      const restoredTask = {
+        ...completedTask,
+        completed: false,
+        completedAt: undefined
+      };
+      setTasks(prev => [...prev, restoredTask]);
+      setCompletedTasks(prev => prev.filter(t => t.id !== id));
+    }
+  };
+
+  const deleteCompletedTask = (id: string) => {
+    setCompletedTasks(prev => prev.filter(t => t.id !== id));
+  };
+
   return (
-    <TasksContext.Provider value={{ tasks, addTask, editTask, deleteTask, toggleCompleteTask, setTasks, petName, setPetName }}>
+    <TasksContext.Provider value={{ 
+      tasks, 
+      completedTasks,
+      addTask, 
+      editTask, 
+      deleteTask, 
+      toggleCompleteTask, 
+      moveToCompleted,
+      restoreTask,
+      deleteCompletedTask,
+      setTasks, 
+      petName, 
+      setPetName 
+    }}>
       {children}
     </TasksContext.Provider>
   );
