@@ -68,7 +68,7 @@ export default function ExploreScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      router.push('/ChooseAccess');
+      router.push('/');
     });
   };
 
