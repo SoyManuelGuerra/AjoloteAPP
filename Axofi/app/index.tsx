@@ -16,15 +16,13 @@ export default function HomeScreen() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const totalSlides = 4; // 3 características + pantalla final
   
-  // Auto-slide
+  // Auto-slide con ciclo infinito
   useEffect(() => {
-    if (currentSlide < totalSlides - 1) {
-      const timer = setTimeout(() => {
-        setCurrentSlide(currentSlide + 1);
-      }, 3000); // Cambia cada 3 segundos
-      
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      setCurrentSlide((currentSlide + 1) % totalSlides); // Ciclo infinito
+    }, 3000); // Cambia cada 3 segundos
+    
+    return () => clearTimeout(timer);
   }, [currentSlide, totalSlides]);
 
   useEffect(() => {
@@ -347,51 +345,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 1.1,
   },
-  formContainer: {
-    width: '100%',
-    maxWidth: 400,
-    alignItems: 'center',
-  },
-  formTitle: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 24,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  input: {
-    width: '100%',
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    fontSize: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-  },
-  formButton: {
-    borderRadius: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    marginBottom: 16,
-    alignItems: 'center',
-    width: '100%',
-  },
-  formButtonText: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-  },
-  link: {
-    fontFamily: 'Nunito',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  error: {
-    color: '#d32f2f',
-    fontSize: 14,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
+
   slideContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -429,34 +383,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     maxWidth: 300, // Limitar el ancho máximo del texto
   },
-  slideActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  skipText: {
-    fontFamily: 'Nunito',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  nextButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  nextButtonText: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-  },
-  finalButtonsContainer: {
-    width: '100%',
-    gap: 12,
-  },
+
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

@@ -27,8 +27,10 @@ export default function LoginScreen() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [forgotPasswordModalVisible, setForgotPasswordModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleInputChange = (field: string, value: string) => {
@@ -38,19 +40,29 @@ export default function LoginScreen() {
     }));
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const validateForm = () => {
     if (!formData.email.trim()) {
       setErrorMessage('Por favor ingresa tu email');
       setErrorModalVisible(true);
       return false;
     }
-    if (!formData.email.includes('@')) {
-      setErrorMessage('Por favor ingresa un email válido');
+    if (!validateEmail(formData.email)) {
+      setErrorMessage('Por favor ingresa un email válido (ejemplo: usuario@dominio.com)');
       setErrorModalVisible(true);
       return false;
     }
     if (!formData.password.trim()) {
       setErrorMessage('Por favor ingresa tu contraseña');
+      setErrorModalVisible(true);
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres');
       setErrorModalVisible(true);
       return false;
     }
@@ -81,8 +93,7 @@ export default function LoginScreen() {
   };
 
   const handleForgotPassword = () => {
-    setErrorMessage('Esta funcionalidad estará disponible próximamente.');
-    setErrorModalVisible(true);
+    setForgotPasswordModalVisible(true);
   };
 
   return (
@@ -203,15 +214,41 @@ export default function LoginScreen() {
               </View>
             </View>
 
-            {/* Forgot Password Link */}
-            <TouchableOpacity 
-              style={styles.forgotPasswordContainer}
-              onPress={handleForgotPassword}
-            >
-              <Text style={[styles.forgotPasswordText, { color: palette.primary }]}>
-                ¿Olvidaste tu contraseña?
-              </Text>
-            </TouchableOpacity>
+            {/* Remember Me & Forgot Password */}
+            <View style={styles.optionsContainer}>
+              <TouchableOpacity 
+                style={styles.rememberMeContainer}
+                onPress={() => setRememberMe(!rememberMe)}
+              >
+                <View style={[
+                  styles.checkbox, 
+                  { 
+                    borderColor: palette.textSecondary,
+                    backgroundColor: rememberMe ? palette.primary : 'transparent'
+                  }
+                ]}>
+                  {rememberMe && (
+                    <Ionicons 
+                      name="checkmark" 
+                      size={16} 
+                      color={palette.onPrimary} 
+                    />
+                  )}
+                </View>
+                <Text style={[styles.rememberMeText, { color: palette.text }]}>
+                  Recordarme
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.forgotPasswordContainer}
+                onPress={handleForgotPassword}
+              >
+                <Text style={[styles.forgotPasswordText, { color: palette.primary }]}>
+                  ¿Olvidaste tu contraseña?
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Login Button */}
             <TouchableOpacity
@@ -289,6 +326,35 @@ export default function LoginScreen() {
                 }}
               >
                 <Text style={[styles.modalButtonText, { color: palette.onPrimary }]}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal de Olvidé Contraseña */}
+        <Modal
+          visible={forgotPasswordModalVisible}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setForgotPasswordModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: palette.cardWarm }]}>
+              <Ionicons 
+                name="mail-outline" 
+                size={48} 
+                color={palette.primary} 
+                style={{ marginBottom: 16 }}
+              />
+              <Text style={[styles.modalTitle, { color: palette.text }]}>Recuperar Contraseña</Text>
+              <Text style={[styles.modalText, { color: palette.textSecondary }]}>
+                Esta funcionalidad estará disponible próximamente. Podrás recuperar tu contraseña por email.
+              </Text>
+              <TouchableOpacity 
+                style={[styles.modalButton, { backgroundColor: palette.primary }]}
+                onPress={() => setForgotPasswordModalVisible(false)}
+              >
+                <Text style={[styles.modalButtonText, { color: palette.onPrimary }]}>Entendido</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -394,9 +460,31 @@ const styles = StyleSheet.create({
   eyeButton: {
     padding: 4,
   },
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderRadius: 4,
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rememberMeText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   forgotPasswordContainer: {
     alignItems: 'flex-end',
-    marginBottom: 24,
   },
   forgotPasswordText: {
     fontSize: 14,

@@ -1,22 +1,51 @@
-import { View, Text, StyleSheet, useColorScheme, Image, TextInput, TouchableOpacity, AppState } from 'react-native';
+import { View, Text, StyleSheet, useColorScheme, Image, TextInput, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
 import { Colors } from '../../constants/Colors';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Svg, Rect } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Quitar importación de Animated y hooks de reanimated
-// import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { useTasks } from '../../context/TasksContext';
+import { useTasks, Task } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const PET_STATES = [
-  { mood: 'Feliz', message: '¡Tu ajolote está feliz y motivado! 🎉', img: require('../../assets/images/axofi_feliz_app.png') },
-  // Aquí podrías agregar más estados y evoluciones
+  { level: 1, mood: 'Curioso', message: '¡Tu ajolote está explorando y aprendiendo! 🔍', emoji: '🤔', img: require('../../assets/images/axofi_feliz_app.png') },
+  { level: 2, mood: 'Feliz', message: '¡Tu ajolote está feliz y motivado! 🎉', emoji: '😊', img: require('../../assets/images/axofi_feliz_app.png') },
+  { level: 3, mood: 'Energético', message: '¡Tu ajolote rebosa de energía! ⚡', emoji: '🤩', img: require('../../assets/images/axofi_feliz_app.png') },
+  { level: 4, mood: 'Sabio', message: '¡Tu ajolote ha ganado mucha experiencia! 🧠', emoji: '🤓', img: require('../../assets/images/axofi_feliz_app.png') },
+  { level: 5, mood: 'Legendario', message: '¡Tu ajolote es una leyenda! 👑', emoji: '👑', img: require('../../assets/images/axofi_feliz_app.png') },
 ];
 
 const PET_NAME_KEY = 'ajolote_name';
-const LEVELS = [0, 100, 250, 500, 1000];
+const LEVELS = [0, 100, 250, 500, 1000, 2000];
+
+// Función para calcular el nivel basado en puntos
+const calculateLevel = (points: number): number => {
+  let level = 1;
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (points >= LEVELS[i]) {
+      return Math.min(i + 1, PET_STATES.length);
+    }
+  }
+  return 1;
+};
+
+// Función para obtener el estado del ajolote basado en el nivel
+const getPetState = (level: number) => {
+  return PET_STATES[level - 1] || PET_STATES[0];
+};
+
+// Función para calcular progreso hacia el siguiente nivel
+const calculateLevelProgress = (points: number, level: number) => {
+  if (level >= LEVELS.length) return 1; // Nivel máximo alcanzado
+  
+  const currentLevelPoints = LEVELS[level - 1];
+  const nextLevelPoints = LEVELS[level];
+  const progressPoints = points - currentLevelPoints;
+  const totalPoints = nextLevelPoints - currentLevelPoints;
+  
+  return Math.min(progressPoints / totalPoints, 1);
+};
 
 export default function PetScreen() {
   const systemColorScheme = useColorScheme();
@@ -25,44 +54,144 @@ export default function PetScreen() {
   const gradientColors: [string, string, string] = isDark
     ? ['#2D2F36', '#3A3D45', '#484C55']
     : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
-  // Simulación de estado (en el futuro, esto puede depender del progreso real)
-  const [petState] = useState(PET_STATES[0]);
-  const { tasks, petName, setPetName } = useTasks();
-  const completedCount = tasks.filter((t: any) => t.completed).length;
-  const totalCount = tasks.length;
-  const progress = totalCount > 0 ? completedCount / totalCount : 0;
+  
+  const { tasks, completedTasks, petName, setPetName } = useTasks();
   const { points } = usePoints();
-  // Calcular nivel actual
-  let level = 1;
-  for (let i = 0; i < LEVELS.length; i++) {
-    if (points >= LEVELS[i]) level = i + 1;
-  }
-  // Nombre editable simple
+  
+  // Calcular estadísticas de tareas
+  const totalTasks = tasks.length;
+  const completedCount = tasks.filter((task: Task) => task.completed).length;
+  const dailyProgress = totalTasks > 0 ? completedCount / totalTasks : 0;
+  
+  // Calcular nivel y estado del ajolote
+  const level = calculateLevel(points);
+  const petState = getPetState(level);
+  const levelProgress = calculateLevelProgress(points, level);
+  
+  // Calcular puntos para el siguiente nivel
+  const currentLevelPoints = LEVELS[level - 1] || 0;
+  const nextLevelPoints = LEVELS[level] || LEVELS[LEVELS.length - 1];
+  const pointsToNext = nextLevelPoints - points;
+  
+  // Estados para edición de nombre
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(petName);
 
-  // Eliminar lógica de animación de flotación
-  // const floatAnim = useSharedValue(0);
-  // useEffect(() => {
-  //   floatAnim.value = withRepeat(
-  //     withSequence(
-  //       withTiming(-10, { duration: 1200 }),
-  //       withTiming(0, { duration: 1200 })
-  //     ),
-  //     -1,
-  //     true
-  //   );
-  // }, []);
-  // const floatStyle = useAnimatedStyle(() => ({
-  //   transform: [{ translateY: floatAnim.value }],
-  // }));
+  // Estados para slides de progreso
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const { width: screenWidth } = Dimensions.get('window');
+  
+  // Determinar qué slides mostrar
+  const slides = [];
+  
+  // Slide 1: Progreso de tareas (siempre visible)
+  slides.push({
+    id: 'tasks',
+    title: '📊 Progreso de Tareas',
+    content: 'tasks'
+  });
+  
+  // Slide 2: Evolución (solo si tiene progreso significativo)
+  if (level < LEVELS.length && levelProgress > 0.1) {
+    slides.push({
+      id: 'evolution',
+      title: '⚡ Evolución',
+      content: 'evolution'
+    });
+  }
 
-  // Elimina el useEffect que leía tareas de AsyncStorage y el estado local de tasks
+  // Auto-slide cada 1 minuto con loop infinito
+  useEffect(() => {
+    if (slides.length > 1) {
+      const timer = setTimeout(() => {
+        const nextSlide = (currentSlide + 1) % slides.length;
+        setCurrentSlide(nextSlide);
+      }, 60000); // 1 minuto = 60,000 milisegundos
+      return () => clearTimeout(timer);
+    }
+  }, [currentSlide, slides.length]);
+
+  // Scroll automático cuando cambia el slide
+  useEffect(() => {
+    if (scrollViewRef.current && slides.length > 1) {
+      scrollViewRef.current.scrollTo({
+        x: currentSlide * screenWidth,
+        animated: true,
+      });
+    }
+  }, [currentSlide, screenWidth]);
 
   // Guardar nombre cuando cambia
   useEffect(() => {
     AsyncStorage.setItem(PET_NAME_KEY, petName);
   }, [petName]);
+
+  // Función para renderizar el slide de progreso de tareas
+  const renderTasksSlide = () => (
+    <View style={[styles.slideBox, { 
+      backgroundColor: palette.cardWarm, 
+      shadowColor: isDark ? '#000' : '#B08B5E',
+      shadowOffset: { width: 0, height: 2 }, 
+      shadowOpacity: 0.15, 
+      shadowRadius: 4,
+      borderWidth: 1.5,
+      borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
+    }]}>
+      <Text style={[styles.evolutionTitle, { color: palette.primary }]}>📊 Progreso de Tareas</Text>
+      <View style={styles.progressBarContainer}>
+        <Svg width="75%" height={14} viewBox="0 0 200 14">
+          <Rect x={0} y={0} width={200} height={14} rx={7} fill={palette.cardAccent} />
+          <Rect
+            x={0}
+            y={0}
+            width={200 * dailyProgress}
+            height={14}
+            rx={7}
+            fill={palette.primary}
+          />
+        </Svg>
+        <View style={styles.progressTextContainer}>
+          <Text style={[styles.progressText, { color: palette.text }]}>
+            {`${completedCount}/${totalTasks} tareas`}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  // Función para renderizar el slide de evolución
+  const renderEvolutionSlide = () => (
+    <View style={[styles.slideBox, { 
+      backgroundColor: palette.cardWarm, 
+      shadowColor: isDark ? '#000' : '#B08B5E',
+      shadowOffset: { width: 0, height: 2 }, 
+      shadowOpacity: 0.15, 
+      shadowRadius: 4,
+      borderWidth: 1.5,
+      borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
+    }]}>
+      <Text style={[styles.evolutionTitle, { color: palette.primary }]}>⚡ Evolución</Text>
+      <View style={styles.progressBarContainer}>
+        <Svg width="75%" height={14} viewBox="0 0 200 14">
+          <Rect x={0} y={0} width={200} height={14} rx={7} fill={palette.cardAccent} />
+          <Rect
+            x={0}
+            y={0}
+            width={200 * levelProgress}
+            height={14}
+            rx={7}
+            fill={palette.accent}
+          />
+        </Svg>
+        <View style={styles.progressTextContainer}>
+          <Text style={[styles.progressText, { color: palette.text }]}>
+            {`${Math.round(levelProgress * 100)}%`}
+          </Text>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
@@ -72,6 +201,11 @@ export default function PetScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
       {/* Nombre editable como título grande, centrado y color accent */}
       <View style={{ alignItems: 'center', marginBottom: 8 }}>
         {editingName ? (
@@ -131,14 +265,15 @@ export default function PetScreen() {
           <Image source={petState.img} style={styles.petImage} resizeMode="contain" />
         </View>
       </View>
-      {/* Estado de ánimo encima del nivel y puntos */}
-      <View style={{ alignItems: 'center', marginBottom: 8 }}>
+      {/* Estado y información del ajolote */}
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        {/* Estado de ánimo */}
         <View style={{ 
           backgroundColor: palette.cardWarm, 
           borderRadius: 14, 
-          paddingVertical: 6, 
-          paddingHorizontal: 18, 
-          marginBottom: 8, 
+          paddingVertical: 8, 
+          paddingHorizontal: 20, 
+          marginBottom: 12, 
           shadowColor: isDark ? '#000' : '#B08B5E',
           shadowOffset: { width: 0, height: 2 }, 
           shadowOpacity: 0.15, 
@@ -146,66 +281,121 @@ export default function PetScreen() {
           borderWidth: 1.5,
           borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
         }}>
-          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.primary, textAlign: 'center' }}>{petState.mood} {petState.mood === 'Feliz' ? '😊' : ''}</Text>
+          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.primary, textAlign: 'center' }}>
+            {petState.emoji} {petState.mood}
+          </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-          <Text style={{ fontSize: 20, marginRight: 2 }}>🌱</Text>
-          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 18, color: palette.primary, fontWeight: 'bold' }}>Nivel {level}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-          <Text style={{ fontSize: 18, marginRight: 2 }}>⭐</Text>
-          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.textSecondary, fontWeight: 'bold' }}>Puntos: {points}</Text>
-        </View>
-      </View>
-
-      {/* Barra de evolución */}
-      <View style={[styles.progressBox, { 
-        backgroundColor: palette.cardWarm, 
-        shadowColor: isDark ? '#000' : '#B08B5E',
-        shadowOffset: { width: 0, height: 2 }, 
-        shadowOpacity: 0.15, 
-        shadowRadius: 4,
-        borderWidth: 1.5,
-        borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
-      }] }>
-        <Text style={[styles.evolutionTitle, { color: palette.primary }]}>Evolución diaria</Text>
-        {/* Barra de progreso visual */}
-        <View style={{ width: 220, height: 24, marginTop: 8, marginBottom: 4, justifyContent: 'center', position: 'relative' }}>
-          {/* Fondo de la barra */}
-          <Svg width={220} height={24}>
-            <Rect x={0} y={0} width={220} height={24} rx={12} fill={palette.cardAccent} />
-            {/* Barra de progreso */}
-            <Rect
-              x={0}
-              y={0}
-              width={220 * progress}
-              height={24}
-              rx={12}
-              fill={palette.primary}
-            />
-          </Svg>
-          {/* Texto de progreso centrado */}
-          <View style={{ position: 'absolute', left: 0, top: 0, width: 220, height: 24, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: palette.text, fontWeight: 'bold', fontSize: 13 }}>
-              {`${completedCount}/${totalCount}`}
+        
+        {/* Nivel y puntos */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 20 }}>🌱</Text>
+            <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 18, color: palette.primary, fontWeight: 'bold' }}>
+              Nivel {level}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 18 }}>⭐</Text>
+            <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.textSecondary, fontWeight: 'bold' }}>
+              {points} pts
             </Text>
           </View>
         </View>
+        
+        {/* Puntos para siguiente nivel - solo si está cerca */}
+        {level < LEVELS.length && levelProgress > 0.3 && (
+          <Text style={{ fontSize: 14, color: palette.textSecondary, textAlign: 'center' }}>
+            {pointsToNext > 0 ? `¡Solo ${pointsToNext} puntos más!` : '¡Nivel máximo!'}
+          </Text>
+        )}
       </View>
 
-      {/* Mensaje motivacional */}
-      <Text style={{
-        fontFamily: 'Nunito',
-        fontSize: 16,
-        color: palette.textSecondary,
-        textAlign: 'center',
-        marginTop: 18,
-        marginBottom: 18,
-        maxWidth: 320,
-        alignSelf: 'center',
-      }}>
-        ¡Completa tus tareas para que tu ajolote evolucione!
-      </Text>
+      {/* Sistema de slides para progreso */}
+      <View style={styles.slidesContainer}>
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={(event) => {
+            const offsetX = event.nativeEvent.contentOffset.x;
+            let newIndex = Math.round(offsetX / screenWidth);
+            
+            // Si intenta ir más allá del último slide, volver al primero
+            if (newIndex >= slides.length) {
+              newIndex = 0;
+              // Scroll inmediato al primer slide sin animación
+              if (scrollViewRef.current) {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ x: 0, animated: false });
+                }, 50);
+              }
+            }
+            // Si intenta ir antes del primer slide, ir al último
+            else if (newIndex < 0) {
+              newIndex = slides.length - 1;
+              // Scroll inmediato al último slide sin animación
+              if (scrollViewRef.current) {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ 
+                    x: (slides.length - 1) * screenWidth, 
+                    animated: false 
+                  });
+                }, 50);
+              }
+            }
+            
+            setCurrentSlide(newIndex);
+          }}
+          style={styles.slidesScrollView}
+        >
+          {slides.map((slide, index) => (
+            <View key={slide.id} style={[styles.slideContainer, { width: screenWidth }]}>
+              {slide.content === 'tasks' ? renderTasksSlide() : renderEvolutionSlide()}
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Pagination dots - solo si hay más de un slide */}
+        {slides.length > 1 && (
+          <View style={styles.paginationContainer}>
+            {slides.map((_, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  {
+                    backgroundColor: index === currentSlide ? palette.primary : palette.textSecondary,
+                    opacity: index === currentSlide ? 1 : 0.3,
+                  },
+                ]}
+                onPress={() => {
+                  setCurrentSlide(index);
+                  if (scrollViewRef.current) {
+                    scrollViewRef.current.scrollTo({
+                      x: index * screenWidth,
+                      animated: true,
+                    });
+                  }
+                }}
+              />
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* Mensaje motivacional dinámico */}
+      <View style={styles.messageContainer}>
+        <Text style={[styles.motivationalMessage, {
+          color: palette.textSecondary,
+        }]}>
+          {petState.message}
+        </Text>
+      </View>
+
+
+      </ScrollView>
     </View>
   );
 }
@@ -213,9 +403,6 @@ export default function PetScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '4%',
   },
   title: {
     fontFamily: 'Nunito-Bold',
@@ -261,8 +448,8 @@ const styles = StyleSheet.create({
   },
   evolutionTitle: {
     fontFamily: 'Nunito-Bold',
-    fontSize: 18,
-    marginBottom: '0.8%',
+    fontSize: 14,
+    marginBottom: 4,
   },
   evolutionText: {
     fontFamily: 'Nunito',
@@ -281,5 +468,71 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
+  },
+  slidesContainer: {
+    marginBottom: '3%',
+  },
+  slidesScrollView: {
+    height: 70,
+  },
+  slideContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  slideBox: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    width: '90%',
+    maxWidth: 260,
+    minHeight: 55,
+    alignSelf: 'center',
+  },
+  progressBarContainer: {
+    width: '100%',
+    marginTop: '2%',
+    marginBottom: '1%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  progressTextContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressText: {
+    fontWeight: 'bold',
+    fontSize: 10,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: '2%',
+    paddingVertical: '1%',
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  messageContainer: {
+    alignItems: 'center',
+    marginTop: '4%',
+    marginBottom: '6%',
+    paddingHorizontal: '8%',
+  },
+  motivationalMessage: {
+    fontFamily: 'Nunito',
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 280,
   },
 }); 

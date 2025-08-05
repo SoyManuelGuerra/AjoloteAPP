@@ -32,6 +32,8 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleInputChange = (field: string, value: string) => {
@@ -41,9 +43,25 @@ export default function RegisterScreen() {
     }));
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    const hasNumber = /\d/.test(password);
+    const hasLetter = /[a-zA-Z]/.test(password);
+    return password.length >= 6 && hasNumber && hasLetter;
+  };
+
   const validateForm = () => {
     if (!formData.name.trim()) {
       setErrorMessage('Por favor ingresa tu nombre');
+      setErrorModalVisible(true);
+      return false;
+    }
+    if (formData.name.trim().length < 2) {
+      setErrorMessage('El nombre debe tener al menos 2 caracteres');
       setErrorModalVisible(true);
       return false;
     }
@@ -52,18 +70,23 @@ export default function RegisterScreen() {
       setErrorModalVisible(true);
       return false;
     }
-    if (!formData.email.includes('@')) {
-      setErrorMessage('Por favor ingresa un email válido');
+    if (!validateEmail(formData.email)) {
+      setErrorMessage('Por favor ingresa un email válido (ejemplo: usuario@dominio.com)');
       setErrorModalVisible(true);
       return false;
     }
-    if (formData.password.length < 6) {
-      setErrorMessage('La contraseña debe tener al menos 6 caracteres');
+    if (!validatePassword(formData.password)) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres, incluyendo números y letras');
       setErrorModalVisible(true);
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage('Las contraseñas no coinciden');
+      setErrorModalVisible(true);
+      return false;
+    }
+    if (!acceptedTerms) {
+      setErrorMessage('Debes aceptar los términos y condiciones para continuar');
       setErrorModalVisible(true);
       return false;
     }
@@ -273,6 +296,38 @@ export default function RegisterScreen() {
               </View>
             </View>
 
+            {/* Términos y Condiciones */}
+            <TouchableOpacity 
+              style={styles.termsContainer}
+              onPress={() => setAcceptedTerms(!acceptedTerms)}
+            >
+              <View style={[
+                styles.checkbox, 
+                { 
+                  borderColor: palette.textSecondary,
+                  backgroundColor: acceptedTerms ? palette.primary : 'transparent'
+                }
+              ]}>
+                {acceptedTerms && (
+                  <Ionicons 
+                    name="checkmark" 
+                    size={16} 
+                    color={palette.onPrimary} 
+                  />
+                )}
+              </View>
+              <View style={styles.termsTextContainer}>
+                <Text style={[styles.termsText, { color: palette.text }]}>
+                  Acepto los{' '}
+                </Text>
+                <TouchableOpacity onPress={() => setTermsModalVisible(true)}>
+                  <Text style={[styles.termsLink, { color: palette.primary }]}>
+                    términos y condiciones
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+
             {/* Register Button */}
             <TouchableOpacity
               style={[
@@ -296,7 +351,7 @@ export default function RegisterScreen() {
               <Text style={[styles.loginText, { color: palette.textSecondary }]}>
                 ¿Ya tienes cuenta?{' '}
               </Text>
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity onPress={() => router.push('/login-screen')}>
                 <Text style={[styles.loginLink, { color: palette.primary }]}>
                   Iniciar Sesión
                 </Text>
@@ -350,6 +405,60 @@ export default function RegisterScreen() {
               >
                 <Text style={[styles.modalButtonText, { color: palette.onPrimary }]}>OK</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Modal de Términos y Condiciones */}
+        <Modal
+          visible={termsModalVisible}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setTermsModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { backgroundColor: palette.cardWarm, width: '90%', maxHeight: '80%' }]}>
+              <Text style={[styles.modalTitle, { color: palette.text }]}>Términos y Condiciones</Text>
+              <ScrollView style={styles.termsScrollView} showsVerticalScrollIndicator={false}>
+                <Text style={[styles.termsModalText, { color: palette.textSecondary }]}>
+                  {'\n'}1. **Uso de la aplicación**{'\n'}
+                  Axofi es una aplicación diseñada para ayudar a personas con ADHD a organizar sus tareas de manera efectiva.
+                  {'\n\n'}
+                  2. **Privacidad de datos**{'\n'}
+                  Tus datos personales y tareas se almacenan de forma segura y no se comparten con terceros.
+                  {'\n\n'}
+                  3. **Funcionalidades**{'\n'}
+                  - Gestión de tareas personalizadas
+                  - Sistema de recompensas con tu ajolote virtual
+                  - Seguimiento de progreso personal
+                  {'\n\n'}
+                  4. **Responsabilidades del usuario**{'\n'}
+                  El usuario se compromete a usar la aplicación de manera responsable y apropiada.
+                  {'\n\n'}
+                  5. **Actualizaciones**{'\n'}
+                  Nos reservamos el derecho de actualizar estos términos. Los cambios se notificarán dentro de la aplicación.
+                  {'\n\n'}
+                  6. **Soporte**{'\n'}
+                  Para cualquier duda o problema, puedes contactarnos a través de la sección de ayuda en la aplicación.
+                </Text>
+              </ScrollView>
+              <View style={styles.termsModalActions}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, { backgroundColor: palette.primary, flex: 1 }]}
+                  onPress={() => {
+                    setAcceptedTerms(true);
+                    setTermsModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalButtonText, { color: palette.onPrimary }]}>Aceptar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modalButton, { backgroundColor: palette.textSecondary, flex: 1, marginLeft: 12 }]}
+                  onPress={() => setTermsModalVisible(false)}
+                >
+                  <Text style={[styles.modalButtonText, { color: palette.onPrimary }]}>Cerrar</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -527,5 +636,48 @@ const styles = StyleSheet.create({
     color: Colors.onPrimary,
     fontFamily: 'Nunito-Bold',
     fontSize: 16,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 24,
+    paddingHorizontal: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderRadius: 4,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  termsTextContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    flex: 1,
+  },
+  termsText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  termsLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  termsScrollView: {
+    maxHeight: 300,
+    marginBottom: 20,
+  },
+  termsModalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  termsModalActions: {
+    flexDirection: 'row',
+    width: '100%',
   },
 }); 
