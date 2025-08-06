@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, useColorScheme, Image, TextInput, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
 import { Colors } from '../../constants/Colors';
-import { useState, useEffect, useRef } from 'react';
-import { Svg, Rect } from 'react-native-svg';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Svg, Rect, Circle } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useTasks, Task } from '../../context/TasksContext';
@@ -18,10 +18,12 @@ const PET_STATES = [
 
 const PET_NAME_KEY = 'ajolote_name';
 const LEVELS = [0, 100, 250, 500, 1000, 2000];
+// Auto-slide removido para evitar problemas de alineación
+const MIN_EVOLUTION_PROGRESS = 0.1;
+const MIN_LEVEL_PROGRESS_SHOW = 0.3;
 
 // Función para calcular el nivel basado en puntos
 const calculateLevel = (points: number): number => {
-  let level = 1;
   for (let i = LEVELS.length - 1; i >= 0; i--) {
     if (points >= LEVELS[i]) {
       return Math.min(i + 1, PET_STATES.length);
@@ -51,147 +53,109 @@ export default function PetScreen() {
   const systemColorScheme = useColorScheme();
   const isDark = systemColorScheme === 'dark';
   const palette = isDark ? Colors.dark : Colors;
-  const gradientColors: [string, string, string] = isDark
-    ? ['#2D2F36', '#3A3D45', '#484C55']
-    : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
+  const gradientColors: [string, string, string] = useMemo(() => 
+    isDark
+      ? ['#2D2F36', '#3A3D45', '#484C55']
+      : ['#F2ECE6', '#E7DFD6', '#DDD2C4'],
+    [isDark]
+  );
   
   const { tasks, completedTasks, petName, setPetName } = useTasks();
   const { points } = usePoints();
-  
-  // Calcular estadísticas de tareas
-  const totalTasks = tasks.length;
-  const completedCount = tasks.filter((task: Task) => task.completed).length;
-  const dailyProgress = totalTasks > 0 ? completedCount / totalTasks : 0;
-  
-  // Calcular nivel y estado del ajolote
-  const level = calculateLevel(points);
-  const petState = getPetState(level);
-  const levelProgress = calculateLevelProgress(points, level);
-  
-  // Calcular puntos para el siguiente nivel
-  const currentLevelPoints = LEVELS[level - 1] || 0;
-  const nextLevelPoints = LEVELS[level] || LEVELS[LEVELS.length - 1];
-  const pointsToNext = nextLevelPoints - points;
   
   // Estados para edición de nombre
   const [editingName, setEditingName] = useState(false);
   const [tempName, setTempName] = useState(petName);
 
-  // Estados para slides de progreso
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const { width: screenWidth } = Dimensions.get('window');
+  // Slides removidos para simplificar la pantalla
   
-  // Determinar qué slides mostrar
-  const slides = [];
+  // Animaciones
+  const petImageScale = useRef(new Animated.Value(1)).current;
+  const moodCardOpacity = useRef(new Animated.Value(0)).current;
+  const progressBarWidth = useRef(new Animated.Value(0)).current;
   
-  // Slide 1: Progreso de tareas (siempre visible)
-  slides.push({
-    id: 'tasks',
-    title: '📊 Progreso de Tareas',
-    content: 'tasks'
-  });
-  
-  // Slide 2: Evolución (solo si tiene progreso significativo)
-  if (level < LEVELS.length && levelProgress > 0.1) {
-    slides.push({
-      id: 'evolution',
-      title: '⚡ Evolución',
-      content: 'evolution'
-    });
-  }
+  // Memoizar cálculos costosos
+  const petStats = useMemo(() => {
+    const totalTasks = tasks.length;
+    const completedCount = tasks.filter((task: Task) => task.completed).length;
+    const dailyProgress = totalTasks > 0 ? completedCount / totalTasks : 0;
+    const level = calculateLevel(points);
+    const petState = getPetState(level);
+    const levelProgress = calculateLevelProgress(points, level);
+    const currentLevelPoints = LEVELS[level - 1] || 0;
+    const nextLevelPoints = LEVELS[level] || LEVELS[LEVELS.length - 1];
+    const pointsToNext = nextLevelPoints - points;
+    
+    return {
+      totalTasks,
+      completedCount,
+      dailyProgress,
+      level,
+      petState,
+      levelProgress,
+      pointsToNext
+    };
+  }, [tasks, points]);
 
-  // Auto-slide cada 1 minuto con loop infinito
-  useEffect(() => {
-    if (slides.length > 1) {
-      const timer = setTimeout(() => {
-        const nextSlide = (currentSlide + 1) % slides.length;
-        setCurrentSlide(nextSlide);
-      }, 60000); // 1 minuto = 60,000 milisegundos
-      return () => clearTimeout(timer);
-    }
-  }, [currentSlide, slides.length]);
+  // Slides removidos para simplificar la pantalla
 
-  // Scroll automático cuando cambia el slide
+  // Animaciones al cargar
   useEffect(() => {
-    if (scrollViewRef.current && slides.length > 1) {
-      scrollViewRef.current.scrollTo({
-        x: currentSlide * screenWidth,
-        animated: true,
-      });
-    }
-  }, [currentSlide, screenWidth]);
+    // Animación de entrada del pet
+    Animated.sequence([
+      Animated.timing(petImageScale, {
+        toValue: 1.1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(petImageScale, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-  // Guardar nombre cuando cambia
+    // Animación de la tarjeta de estado de ánimo
+    Animated.timing(moodCardOpacity, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    // Animación de la barra de progreso
+    Animated.timing(progressBarWidth, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: false,
+    }).start();
+  }, []);
+
+  // Auto-slide removido para evitar problemas de alineación
+
+  // Guardar nombre optimizado
   useEffect(() => {
-    AsyncStorage.setItem(PET_NAME_KEY, petName);
+    const saveName = async () => {
+      try {
+        await AsyncStorage.setItem(PET_NAME_KEY, petName);
+      } catch (error) {
+        console.warn('Error saving pet name:', error);
+      }
+    };
+    saveName();
   }, [petName]);
 
-  // Función para renderizar el slide de progreso de tareas
-  const renderTasksSlide = () => (
-    <View style={[styles.slideBox, { 
-      backgroundColor: palette.cardWarm, 
-      shadowColor: isDark ? '#000' : '#B08B5E',
-      shadowOffset: { width: 0, height: 2 }, 
-      shadowOpacity: 0.15, 
-      shadowRadius: 4,
-      borderWidth: 1.5,
-      borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
-    }]}>
-      <Text style={[styles.evolutionTitle, { color: palette.primary }]}>📊 Progreso de Tareas</Text>
-      <View style={styles.progressBarContainer}>
-        <Svg width="75%" height={14} viewBox="0 0 200 14">
-          <Rect x={0} y={0} width={200} height={14} rx={7} fill={palette.cardAccent} />
-          <Rect
-            x={0}
-            y={0}
-            width={200 * dailyProgress}
-            height={14}
-            rx={7}
-            fill={palette.primary}
-          />
-        </Svg>
-        <View style={styles.progressTextContainer}>
-          <Text style={[styles.progressText, { color: palette.text }]}>
-            {`${completedCount}/${totalTasks} tareas`}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
+  // Callbacks optimizados
+  const handleNameEdit = useCallback(() => {
+    setTempName(petName);
+    setEditingName(true);
+  }, [petName]);
 
-  // Función para renderizar el slide de evolución
-  const renderEvolutionSlide = () => (
-    <View style={[styles.slideBox, { 
-      backgroundColor: palette.cardWarm, 
-      shadowColor: isDark ? '#000' : '#B08B5E',
-      shadowOffset: { width: 0, height: 2 }, 
-      shadowOpacity: 0.15, 
-      shadowRadius: 4,
-      borderWidth: 1.5,
-      borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
-    }]}>
-      <Text style={[styles.evolutionTitle, { color: palette.primary }]}>⚡ Evolución</Text>
-      <View style={styles.progressBarContainer}>
-        <Svg width="75%" height={14} viewBox="0 0 200 14">
-          <Rect x={0} y={0} width={200} height={14} rx={7} fill={palette.cardAccent} />
-          <Rect
-            x={0}
-            y={0}
-            width={200 * levelProgress}
-            height={14}
-            rx={7}
-            fill={palette.accent}
-          />
-        </Svg>
-        <View style={styles.progressTextContainer}>
-          <Text style={[styles.progressText, { color: palette.text }]}>
-            {`${Math.round(levelProgress * 100)}%`}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
+  const handleNameSave = useCallback(() => {
+    setPetName(tempName);
+    setEditingName(false);
+  }, [tempName, setPetName]);
+
+  // Funciones de slides removidas para simplificar
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
@@ -201,13 +165,17 @@ export default function PetScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <ScrollView 
-        style={{ flex: 1 }} 
-        contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20, paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
+      <View 
+        style={{ 
+          flex: 1, 
+          paddingTop: 60, 
+          paddingHorizontal: 20, 
+          paddingBottom: 20,
+          justifyContent: 'space-between'
+        }}
       >
       {/* Nombre editable como título grande, centrado y color accent */}
-      <View style={{ alignItems: 'center', marginBottom: 8 }}>
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
         {editingName ? (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TextInput
@@ -215,187 +183,129 @@ export default function PetScreen() {
               onChangeText={setTempName}
               style={{
                 fontFamily: 'Nunito-Bold',
-                fontSize: 34,
+                fontSize: 32,
                 color: palette.accent,
                 backgroundColor: 'transparent',
-                borderBottomWidth: 2,
+                borderBottomWidth: 3,
                 borderColor: palette.accent,
                 textAlign: 'center',
                 width: 200,
-                marginRight: 8,
+                marginRight: 12,
                 marginBottom: 8,
+                paddingVertical: 4,
               }}
               maxLength={16}
               autoFocus
-              onSubmitEditing={() => {
-                setPetName(tempName);
-                setEditingName(false);
-              }}
-              onBlur={() => {
-                setPetName(tempName);
-                setEditingName(false);
-              }}
+              onSubmitEditing={handleNameSave}
+              onBlur={handleNameSave}
               returnKeyType="done"
             />
-            <TouchableOpacity onPress={() => { setPetName(tempName); setEditingName(false); }}>
-              <Text style={{ color: palette.accent, fontWeight: 'bold', fontSize: 22 }}>OK</Text>
+            <TouchableOpacity 
+              onPress={handleNameSave}
+              style={{
+                backgroundColor: palette.accent,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+              }}
+            >
+              <Text style={{ color: palette.background, fontWeight: 'bold', fontSize: 16 }}>OK</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity onPress={() => { setTempName(petName); setEditingName(true); }} style={{ alignSelf: 'center' }}>
+          <TouchableOpacity onPress={handleNameEdit} style={{ alignSelf: 'center' }}>
             <Text style={{
               fontFamily: 'Nunito-Bold',
-              fontSize: 34,
+              fontSize: 32,
               color: palette.primary,
               fontWeight: 'bold',
               marginBottom: 4,
               textAlign: 'center',
+              textShadowColor: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)',
+              textShadowOffset: { width: 0, height: 1 },
+              textShadowRadius: 2,
             }}>{petName}</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Imagen del ajolote */}
-      <View style={[{ alignItems: 'center', marginBottom: 8 }]}>
-        <View style={[styles.petImageContainer, {
-          backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-          shadowColor: 'transparent',
-        }]}
-        >
-          <Image source={petState.img} style={styles.petImage} resizeMode="contain" />
-        </View>
+      {/* Imagen del ajolote con animación */}
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <Animated.View style={[
+          styles.petImageContainer, 
+          {
+            backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+            shadowColor: isDark ? '#000' : '#B08B5E',
+            shadowOffset: { width: 0, height: 8 }, 
+            shadowOpacity: 0.25, 
+            shadowRadius: 16,
+            transform: [{ scale: petImageScale }],
+          }
+        ]}>
+          <Image source={petStats.petState.img} style={styles.petImage} resizeMode="contain" />
+        </Animated.View>
       </View>
+      
       {/* Estado y información del ajolote */}
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        {/* Estado de ánimo */}
-        <View style={{ 
-          backgroundColor: palette.cardWarm, 
-          borderRadius: 14, 
-          paddingVertical: 8, 
-          paddingHorizontal: 20, 
-          marginBottom: 12, 
-          shadowColor: isDark ? '#000' : '#B08B5E',
-          shadowOffset: { width: 0, height: 2 }, 
-          shadowOpacity: 0.15, 
-          shadowRadius: 4,
-          borderWidth: 1.5,
-          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(176,139,94,0.15)',
-        }}>
-          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.primary, textAlign: 'center' }}>
-            {petState.emoji} {petState.mood}
+        {/* Estado de ánimo con animación */}
+        <Animated.View style={[
+          styles.moodCard,
+          { 
+            backgroundColor: palette.cardWarm, 
+            opacity: moodCardOpacity,
+            shadowColor: isDark ? '#000' : '#B08B5E',
+            shadowOffset: { width: 0, height: 4 }, 
+            shadowOpacity: 0.2, 
+            shadowRadius: 8,
+            borderWidth: 1.5,
+            borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(176,139,94,0.2)',
+          }
+        ]}>
+          <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 18, color: palette.primary, textAlign: 'center' }}>
+            {petStats.petState.emoji} {petStats.petState.mood}
           </Text>
-        </View>
+        </Animated.View>
         
-        {/* Nivel y puntos */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 20, marginBottom: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 20 }}>🌱</Text>
-            <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 18, color: palette.primary, fontWeight: 'bold' }}>
-              Nivel {level}
+        {/* Nivel y puntos con mejor espaciado */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={{ fontSize: 24 }}>🌱</Text>
+            <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 20, color: palette.primary, fontWeight: 'bold' }}>
+              Nivel {petStats.level}
             </Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 18 }}>⭐</Text>
-            <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 16, color: palette.textSecondary, fontWeight: 'bold' }}>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={{ fontSize: 20 }}>⭐</Text>
+            <Text style={{ fontFamily: 'Nunito-Bold', fontSize: 18, color: palette.textSecondary, fontWeight: 'bold' }}>
               {points} pts
             </Text>
           </View>
         </View>
         
-        {/* Puntos para siguiente nivel - solo si está cerca */}
-        {level < LEVELS.length && levelProgress > 0.3 && (
-          <Text style={{ fontSize: 14, color: palette.textSecondary, textAlign: 'center' }}>
-            {pointsToNext > 0 ? `¡Solo ${pointsToNext} puntos más!` : '¡Nivel máximo!'}
-          </Text>
-        )}
-      </View>
-
-      {/* Sistema de slides para progreso */}
-      <View style={styles.slidesContainer}>
-        <ScrollView
-          ref={scrollViewRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onMomentumScrollEnd={(event) => {
-            const offsetX = event.nativeEvent.contentOffset.x;
-            let newIndex = Math.round(offsetX / screenWidth);
-            
-            // Si intenta ir más allá del último slide, volver al primero
-            if (newIndex >= slides.length) {
-              newIndex = 0;
-              // Scroll inmediato al primer slide sin animación
-              if (scrollViewRef.current) {
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollTo({ x: 0, animated: false });
-                }, 50);
-              }
-            }
-            // Si intenta ir antes del primer slide, ir al último
-            else if (newIndex < 0) {
-              newIndex = slides.length - 1;
-              // Scroll inmediato al último slide sin animación
-              if (scrollViewRef.current) {
-                setTimeout(() => {
-                  scrollViewRef.current?.scrollTo({ 
-                    x: (slides.length - 1) * screenWidth, 
-                    animated: false 
-                  });
-                }, 50);
-              }
-            }
-            
-            setCurrentSlide(newIndex);
-          }}
-          style={styles.slidesScrollView}
-        >
-          {slides.map((slide, index) => (
-            <View key={slide.id} style={[styles.slideContainer, { width: screenWidth }]}>
-              {slide.content === 'tasks' ? renderTasksSlide() : renderEvolutionSlide()}
-            </View>
-          ))}
-        </ScrollView>
-
-        {/* Pagination dots - solo si hay más de un slide */}
-        {slides.length > 1 && (
-          <View style={styles.paginationContainer}>
-            {slides.map((_, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.paginationDot,
-                  {
-                    backgroundColor: index === currentSlide ? palette.primary : palette.textSecondary,
-                    opacity: index === currentSlide ? 1 : 0.3,
-                  },
-                ]}
-                onPress={() => {
-                  setCurrentSlide(index);
-                  if (scrollViewRef.current) {
-                    scrollViewRef.current.scrollTo({
-                      x: index * screenWidth,
-                      animated: true,
-                    });
-                  }
-                }}
-              />
-            ))}
+        {/* Puntos para siguiente nivel - solo si no es nivel máximo */}
+        {petStats.level < PET_STATES.length && (
+          <View style={styles.nextLevelContainer}>
+            <Text style={{ fontSize: 15, color: palette.textSecondary, textAlign: 'center', fontFamily: 'Nunito' }}>
+              {petStats.pointsToNext > 0 ? `¡Solo ${petStats.pointsToNext} puntos más!` : '¡Nivel máximo!'}
+            </Text>
           </View>
         )}
       </View>
+
+
 
       {/* Mensaje motivacional dinámico */}
       <View style={styles.messageContainer}>
         <Text style={[styles.motivationalMessage, {
           color: palette.textSecondary,
         }]}>
-          {petState.message}
+          {petStats.petState.message}
         </Text>
       </View>
 
-
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -412,18 +322,18 @@ const styles = StyleSheet.create({
   },
   petImageContainer: {
     backgroundColor: '#fff',
-    borderRadius: 100,
-    padding: 18,
-    marginBottom: '1.5%',
+    borderRadius: 140,
+    padding: 24,
+    marginBottom: '2%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
   },
   petImage: {
-    width: 120,
-    height: 120,
+    width: 160,
+    height: 160,
   },
   mood: {
     fontFamily: 'Nunito-Bold',
@@ -448,8 +358,8 @@ const styles = StyleSheet.create({
   },
   evolutionTitle: {
     fontFamily: 'Nunito-Bold',
-    fontSize: 14,
-    marginBottom: 4,
+    fontSize: 16,
+    marginBottom: 8,
   },
   evolutionText: {
     fontFamily: 'Nunito',
@@ -470,10 +380,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   slidesContainer: {
-    marginBottom: '3%',
+    marginBottom: '2%',
   },
   slidesScrollView: {
-    height: 70,
+    height: 100,
   },
   slideContainer: {
     alignItems: 'center',
@@ -481,22 +391,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   slideBox: {
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    width: '90%',
-    maxWidth: 260,
-    minHeight: 55,
+    width: '100%',
+    maxWidth: 340,
+    minHeight: 80,
     alignSelf: 'center',
   },
   progressBarContainer: {
     width: '100%',
-    marginTop: '2%',
-    marginBottom: '1%',
-    justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
   },
   progressTextContainer: {
     position: 'absolute',
@@ -507,32 +413,164 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontWeight: 'bold',
-    fontSize: 10,
+    fontSize: 16,
+    fontFamily: 'Nunito-Bold',
   },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: '2%',
-    paddingVertical: '1%',
+    marginTop: '3%',
+    paddingVertical: '2%',
   },
   paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 6,
   },
   messageContainer: {
     alignItems: 'center',
-    marginTop: '4%',
-    marginBottom: '6%',
+    marginTop: '2%',
     paddingHorizontal: '8%',
   },
   motivationalMessage: {
     fontFamily: 'Nunito',
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 280,
+    lineHeight: 22,
+    maxWidth: 300,
+  },
+  moodCard: {
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 24,
+    marginBottom: 12,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  nextLevelContainer: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  slideHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 10,
+  },
+  slideIcon: {
+    fontSize: 24,
+  },
+  slideTitle: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+  },
+  progressBarBackground: {
+    width: '100%',
+    height: 18,
+    borderRadius: 9,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 9,
+  },
+  progressBarShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: '50%',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 9,
+  },
+  slideContent: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  progressSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  progressBarWrapper: {
+    width: '100%',
+    height: 20,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  infoSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  infoText: {
+    fontFamily: 'Nunito',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  percentageText: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+    textAlign: 'center',
+  },
+  progressContainer: {
+    marginBottom: 16,
+  },
+  progressCard: {
+    borderRadius: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 340,
+    minHeight: 80,
+    alignSelf: 'center',
+  },
+  progressContent: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 10,
+  },
+  progressIcon: {
+    fontSize: 24,
+  },
+  progressTitle: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+  },
+  progressInfo: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  progressPercentage: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 4,
   },
 }); 
