@@ -1,10 +1,12 @@
-import { View, Text, StyleSheet, Switch, TouchableOpacity, useColorScheme, ScrollView, Image, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, ScrollView, Image, TextInput, Modal } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { useState, useEffect } from 'react';
 import { useTasks } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const LEVELS = [0, 100, 250, 500, 1000];
 const USER_KEY = 'ajolote_user_data';
@@ -25,23 +27,17 @@ export default function ProfileScreen() {
     if (points >= LEVELS[i]) level = i + 1;
   }
 
-  // Estados locales para switches (sin lógica real aún)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(systemColorScheme === 'dark');
-  const [language, setLanguage] = useState('es');
+  // Estados para datos de usuario
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const [showResetModal, setShowResetModal] = useState(false);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
 
-  // Función para reiniciar progreso (solo resetea puntos, tareas y accesorios)
-  const { setPoints } = usePoints();
-  const { setTasks } = useTasks();
-  const handleResetProgress = async () => {
-    setShowResetModal(false);
-    setPoints(0);
-    setTasks([]);
-    await AsyncStorage.setItem('ajolote_unlocked_accessories', JSON.stringify([]));
-  };
+  // Calcular progreso al siguiente nivel
+  const currentLevelPoints = LEVELS[level - 1] || 0;
+  const nextLevelPoints = LEVELS[level] || LEVELS[LEVELS.length - 1];
+  const progressPercentage = level === LEVELS.length 
+    ? 100 
+    : ((points - currentLevelPoints) / (nextLevelPoints - currentLevelPoints)) * 100;
 
   // Cargar datos de usuario al montar
   useEffect(() => {
@@ -68,58 +64,105 @@ export default function ProfileScreen() {
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
-      <Text style={[styles.title, { color: palette.text }]}>Perfil y Configuración</Text>
-      {/* Bloque de mascota/perfil */}
-      <Text style={[styles.groupTitle, { color: palette.text }]}>Tu Ajolote</Text>
-      <View style={[styles.profileBox, { backgroundColor: palette.cardWarm }] }>
+      
+      {/* Header con título centrado y botón de configuración en esquina */}
+      <View style={styles.headerContainer}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: palette.text, marginTop: 0, marginBottom: 0 }]}>Mi Perfil</Text>
+          <TouchableOpacity 
+            style={styles.helpButton}
+            onPress={() => setHelpModalVisible(true)}
+          >
+            <Ionicons name="information-circle-outline" size={20} color={palette.textSecondary} />
+          </TouchableOpacity>
+        </View>
+        
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => router.push('../settings')}
+        >
+          <Ionicons name="settings-outline" size={22} color={palette.textSecondary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Bloque principal de la mascota */}
+      <View style={[styles.petCard, { backgroundColor: palette.cardWarm }]}>
         <Image source={require('../../assets/images/axofi-logo-v1.png')} style={styles.avatar} />
         <Text style={[styles.petName, { color: palette.text }]}>{petName}</Text>
-        <View style={styles.levelRow}>
-          <Text style={styles.levelIcon}>🌱</Text>
-          <Text style={[styles.levelText, { color: palette.primary }]}>Nivel {level}</Text>
+        
+        {/* Información de nivel */}
+        <View style={styles.levelContainer}>
+          <View style={styles.levelRow}>
+            <Text style={styles.levelIcon}>🌱</Text>
+            <Text style={[styles.levelText, { color: palette.primary }]}>Nivel {level}</Text>
+          </View>
+          
+          {/* Barra de progreso */}
+          {level < LEVELS.length && (
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressBar, { backgroundColor: palette.background }]}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { backgroundColor: palette.primary, width: `${progressPercentage}%` }
+                  ]} 
+                />
+              </View>
+              <Text style={[styles.progressText, { color: palette.textSecondary }]}>
+                {points}/{nextLevelPoints} puntos
+              </Text>
+            </View>
+          )}
+          
+          {level === LEVELS.length && (
+            <Text style={[styles.maxLevelText, { color: palette.primary }]}>
+              ¡Nivel máximo alcanzado! 🏆
+            </Text>
+          )}
         </View>
-        <View style={styles.pointsRow}>
-          <Text style={styles.pointsIcon}>⭐</Text>
-          <Text style={[styles.pointsText, { color: palette.textSecondary }]}>Puntos: {points}</Text>
+        
+        {/* Estadísticas rápidas */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statIcon}>⭐</Text>
+            <Text style={[styles.statValue, { color: palette.text }]}>{points}</Text>
+            <Text style={[styles.statLabel, { color: palette.textSecondary }]}>Puntos</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statIcon}>🎯</Text>
+            <Text style={[styles.statValue, { color: palette.text }]}>-</Text>
+            <Text style={[styles.statLabel, { color: palette.textSecondary }]}>Tareas</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statIcon}>🏅</Text>
+            <Text style={[styles.statValue, { color: palette.text }]}>-</Text>
+            <Text style={[styles.statLabel, { color: palette.textSecondary }]}>Logros</Text>
+          </View>
         </View>
       </View>
-      {/* Sección de cuenta */}
-      <Text style={[styles.groupTitle, { color: palette.text }]}>Cuenta</Text>
-      <View style={[styles.accountSection, { backgroundColor: palette.cardWarm }] }>
-        <Text style={[styles.sectionTitle, { color: palette.text, marginBottom: 14 }]}>Datos de cuenta</Text>
+
+      {/* Información de cuenta */}
+      <View style={[styles.section, { backgroundColor: palette.cardWarm }]}>
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>Información Personal</Text>
+        
         <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: palette.background,
-              color: palette.text,
-              borderColor: palette.accent,
-              borderRadius: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 14,
-              fontSize: 16,
-              marginBottom: 10,
-            },
-          ]}
+          style={[styles.input, { 
+            backgroundColor: palette.background,
+            color: palette.text,
+            borderColor: palette.accent 
+          }]}
           placeholder="Nombre de usuario"
           placeholderTextColor={palette.textSecondary}
           value={userName}
           onChangeText={setUserName}
         />
+        
         <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: palette.background,
-              color: palette.text,
-              borderColor: palette.accent,
-              borderRadius: 12,
-              paddingVertical: 12,
-              paddingHorizontal: 14,
-              fontSize: 16,
-              marginBottom: 10,
-            },
-          ]}
+          style={[styles.input, { 
+            backgroundColor: palette.background,
+            color: palette.text,
+            borderColor: palette.accent 
+          }]}
           placeholder="Email"
           placeholderTextColor={palette.textSecondary}
           value={userEmail}
@@ -128,136 +171,82 @@ export default function ProfileScreen() {
           autoCapitalize="none"
         />
       </View>
-      {/* Sección de notificaciones */}
-      <Text style={[styles.groupTitle, { color: palette.text }]}>Notificaciones</Text>
-      <View style={[styles.section, { backgroundColor: palette.cardWarm }] }>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Notificaciones</Text>
-        <View style={styles.row}>
-          <Text style={{ color: palette.text }}>Activar notificaciones</Text>
-          <Switch
-            value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
-            trackColor={{ false: '#4D4F55', true: '#A8C3B8' }}
-            thumbColor={notificationsEnabled ? '#F6F4EF' : '#888'}
-          />
-        </View>
-        <Text style={{ color: palette.textSecondary, fontSize: 12, marginTop: 2 }}>
-          Recibirás recordatorios diarios y alertas si tu ajolote desbloquea recompensas.
-        </Text>
-      </View>
-      {/* Sección de preferencias */}
-      <Text style={[styles.groupTitle, { color: palette.text }]}>Preferencias</Text>
-      <View style={[styles.section, { backgroundColor: palette.cardWarm }] }>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Preferencias</Text>
-        <View style={styles.row}>
-          <Text style={{ color: palette.text }}>Tema oscuro</Text>
-          <Switch
-            value={darkMode}
-            onValueChange={setDarkMode}
-            trackColor={{ false: '#4D4F55', true: '#A8C3B8' }}
-            thumbColor={darkMode ? '#F6F4EF' : '#888'}
-          />
-        </View>
-        <Text style={{ color: palette.textSecondary, fontSize: 12, marginBottom: 10 }}>
-          Usando tema {darkMode ? 'oscuro' : 'claro'}
-        </Text>
-        <Text style={[styles.languageLabel, { color: palette.text }]}>Idioma preferido</Text>
-        <View style={styles.languageSelector}>
-          <TouchableOpacity
-            onPress={() => setLanguage('es')}
-            style={[
-              styles.pillToggle,
-              language === 'es'
-                ? { backgroundColor: palette.primary, borderColor: palette.primary }
-                : { borderColor: palette.primary },
-            ]}
-          >
-            <Text style={{
-              color: language === 'es' ? palette.onPrimary : palette.text,
-              fontWeight: '600',
-              fontSize: 16,
-            }}>ES</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setLanguage('en')}
-            style={[
-              styles.pillToggle,
-              language === 'en'
-                ? { backgroundColor: palette.primary, borderColor: palette.primary }
-                : { borderColor: palette.primary },
-            ]}
-          >
-            <Text style={{
-              color: language === 'en' ? palette.onPrimary : palette.text,
-              fontWeight: '600',
-              fontSize: 16,
-            }}>EN</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      {/* Sección avanzada */}
-      <Text style={[styles.groupTitle, { color: palette.text }]}>Avanzado</Text>
-      <View style={[styles.section, { backgroundColor: palette.cardWarm }] }>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Progreso</Text>
-        <TouchableOpacity
-          style={[
-            styles.resetButton,
-            {
-              backgroundColor: isDark ? '#D36A6A' : '#FFCCCC',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 8,
-            },
-          ]}
-          onPress={() => setShowResetModal(true)}
-        >
-          <Text style={{ fontSize: 18, marginRight: 6 }}>⚠️</Text>
-          <Text style={{ color: isDark ? '#fff' : '#B00020', fontWeight: 'bold', fontSize: 16 }}>
-            Reiniciar progreso
-          </Text>
+
+      {/* Acciones rápidas */}
+      <View style={[styles.section, { backgroundColor: palette.cardWarm }]}>
+        <Text style={[styles.sectionTitle, { color: palette.text }]}>Acciones Rápidas</Text>
+        
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: palette.primary }]}>
+          <Text style={styles.actionIcon}>📊</Text>
+          <Text style={[styles.actionText, { color: palette.onPrimary }]}>Ver Estadísticas</Text>
         </TouchableOpacity>
-        {/* Modal de confirmación */}
-        <Modal
-          visible={showResetModal}
-          animationType="fade"
-          transparent
-          onRequestClose={() => setShowResetModal(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { backgroundColor: palette.card }] }>
-              <Text style={{ color: palette.text, fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>¿Estás seguro?</Text>
-              <Text style={{ color: palette.textSecondary, fontSize: 13, marginBottom: 18, textAlign: 'center' }}>
-                Esta acción reiniciará tus puntos, tareas y accesorios desbloqueados. No se puede deshacer.
-              </Text>
-              <View style={{ flexDirection: 'row', gap: 12, width: '100%', justifyContent: 'space-between' }}>
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: palette.primary }]}
-                  onPress={handleResetProgress}
-                >
-                  <Text style={{ color: palette.onPrimary, fontWeight: 'bold' }}>Reiniciar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: isDark ? '#333' : '#eee' }]}
-                  onPress={() => setShowResetModal(false)}
-                >
-                  <Text style={{ color: palette.primary, fontWeight: 'bold' }}>Cancelar</Text>
-                </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.actionButton, { backgroundColor: palette.accent }]}>
+          <Text style={styles.actionIcon}>🎨</Text>
+          <Text style={[styles.actionText, { color: palette.text }]}>Personalizar Mascota</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal de ayuda */}
+      <Modal
+        visible={helpModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setHelpModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.helpModalContent, { backgroundColor: palette.cardWarm }]}>
+            <Text style={[styles.helpTitle, { color: palette.text }]}>¿Qué puedes hacer aquí?</Text>
+            
+            <View style={styles.helpItem}>
+              <Text style={styles.helpIcon}>🐾</Text>
+              <View style={styles.helpTextContainer}>
+                <Text style={[styles.helpItemTitle, { color: palette.text }]}>Ver el progreso de tu mascota</Text>
+                <Text style={[styles.helpItemDescription, { color: palette.textSecondary }]}>
+                  Revisa el nivel actual, puntos ganados y progreso hacia el siguiente nivel
+                </Text>
               </View>
             </View>
+
+            <View style={styles.helpItem}>
+              <Text style={styles.helpIcon}>👤</Text>
+              <View style={styles.helpTextContainer}>
+                <Text style={[styles.helpItemTitle, { color: palette.text }]}>Editar información personal</Text>
+                <Text style={[styles.helpItemDescription, { color: palette.textSecondary }]}>
+                  Actualiza tu nombre de usuario y email en cualquier momento
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.helpItem}>
+              <Text style={styles.helpIcon}>📊</Text>
+              <View style={styles.helpTextContainer}>
+                <Text style={[styles.helpItemTitle, { color: palette.text }]}>Acciones rápidas</Text>
+                <Text style={[styles.helpItemDescription, { color: palette.textSecondary }]}>
+                  Accede a estadísticas detalladas y personaliza tu mascota
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.helpItem}>
+              <Text style={styles.helpIcon}>⚙️</Text>
+              <View style={styles.helpTextContainer}>
+                <Text style={[styles.helpItemTitle, { color: palette.text }]}>Configuración</Text>
+                <Text style={[styles.helpItemDescription, { color: palette.textSecondary }]}>
+                  Toca el botón de configuración para ajustar notificaciones, tema y más
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.closeButton, { backgroundColor: palette.primary }]}
+              onPress={() => setHelpModalVisible(false)}
+            >
+              <Text style={[styles.closeButtonText, { color: palette.onPrimary }]}>Entendido</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
-      {/* Sección: Contacto */}
-      <View style={[styles.section, { backgroundColor: palette.card }] }>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Contacto</Text>
-        <Text style={{ color: palette.textSecondary, fontSize: 12 }}>¿Tienes dudas o sugerencias? Escríbenos a soporte@ajoloteapp.com</Text>
-      </View>
-      {/* Sección: Info legal */}
-      <View style={[styles.section, { backgroundColor: palette.card }] }>
-        <Text style={[styles.sectionTitle, { color: palette.text }]}>Información legal</Text>
-        <Text style={{ color: palette.textSecondary, fontSize: 11 }}>Términos y condiciones | Política de privacidad</Text>
-      </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -265,55 +254,141 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    padding: '3%',
-    paddingBottom: '6%',
+    padding: 16,
+    paddingBottom: 24,
   },
-  profileBox: {
-    alignItems: 'center',
-    marginTop: '4%',
-    marginBottom: '2.2%',
-    padding: '2.7%',
-    backgroundColor: Colors.card,
-    borderRadius: 20,
+  headerContainer: {
     width: '100%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    marginTop: 48,
+    marginBottom: 8,
+    position: 'relative',
   },
-  avatar: {
-    width: '9%',
-    height: '9%',
-    borderRadius: 36,
-    marginBottom: '1%',
-  },
-  petName: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 20,
-    marginBottom: '0.3%',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontFamily: 'Nunito-Bold',
     fontSize: 28,
-    marginTop: '6%',
-    marginBottom: '3%',
+    marginTop: '3%',
+    marginBottom: '2%',
     color: Colors.text,
   },
-  groupTitle: {
+  helpButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  petCard: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+    padding: 24,
+    borderRadius: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 12,
+  },
+  petName: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  levelContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  levelIcon: {
+    fontSize: 24,
+  },
+  levelText: {
+    fontFamily: 'Nunito-Bold',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  progressContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  progressBar: {
+    width: '100%',
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  maxLevelText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  statValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginTop: '3.5%',
-    marginBottom: '0.8%',
-    letterSpacing: 0.2,
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   section: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: Colors.card,
-    borderRadius: 18,
-    padding: '2.2%',
-    marginBottom: '4%',
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -322,131 +397,89 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'Nunito-Bold',
     fontSize: 18,
-    marginBottom: '1.2%',
-    color: Colors.text,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '1.5%',
-  },
-  languageSelector: {
-    flexDirection: 'row',
-    gap: 12,
-    justifyContent: 'center',
-    marginBottom: '0.3%',
-  },
-  langButton: {
-    paddingVertical: '0.8%',
-    paddingHorizontal: '2%',
-    borderRadius: 12,
-    marginHorizontal: '0.3%',
-    backgroundColor: Colors.card,
-  },
-  resetButton: {
-    marginTop: '1%',
-    paddingVertical: '1.5%',
-    borderRadius: 14,
-    alignItems: 'center',
-    marginBottom: '0.3%',
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
   input: {
     width: '100%',
-    backgroundColor: Colors.background,
     borderRadius: 12,
-    paddingVertical: '1.2%',
-    paddingHorizontal: '1.7%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     fontSize: 16,
-    color: Colors.text,
     borderWidth: 1,
-    borderColor: Colors.accent,
-    marginBottom: '1.2%',
+    marginBottom: 12,
   },
-  levelRow: {
+  actionButton: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: '0.8%',
-    marginBottom: '0.3%',
-    gap: 6,
-  },
-  levelIcon: {
-    fontSize: 22,
-    marginRight: 2,
-  },
-  levelText: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  pointsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: '0.3%',
-    gap: 6,
-  },
-  pointsIcon: {
-    fontSize: 20,
-    marginRight: 2,
-  },
-  pointsText: {
-    fontFamily: 'Nunito-Bold',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  accountSection: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: Colors.card,
-    borderRadius: 18,
-    padding: '2.2%',
-    marginBottom: '2.7%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  languageLabel: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    marginTop: '1%',
-    marginBottom: '1%',
-  },
-  pillToggle: {
-    paddingVertical: '1.2%',
-    paddingHorizontal: '3.5%',
-    borderRadius: 24,
-    backgroundColor: Colors.card,
-    marginHorizontal: '0.3%',
-    borderWidth: 2,
-    borderColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 60,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    marginBottom: 12,
+    gap: 8,
+  },
+  actionIcon: {
+    fontSize: 20,
+  },
+  actionText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  modalContent: {
-    backgroundColor: Colors.card,
+  helpModalContent: {
     borderRadius: 20,
-    padding: '3%',
-    width: 320,
-    alignItems: 'center',
+    padding: 24,
+    width: '100%',
+    maxWidth: 350,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
   },
-  modalButton: {
+  helpTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  helpItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    gap: 12,
+  },
+  helpIcon: {
+    fontSize: 20,
+    marginTop: 2,
+  },
+  helpTextContainer: {
     flex: 1,
-    backgroundColor: Colors.primary,
+  },
+  helpItemTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  helpItemDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  closeButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 16,
-    paddingVertical: '1.5%',
     alignItems: 'center',
-    marginHorizontal: '0.5%',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 

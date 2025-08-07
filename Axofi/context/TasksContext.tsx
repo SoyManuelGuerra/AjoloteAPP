@@ -23,7 +23,6 @@ interface TasksContextType {
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   petName: string;
   setPetName: (name: string) => void;
-  debugAsyncStorage: () => Promise<void>;
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
@@ -184,25 +183,6 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCompletedTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  // Función de debugging (remover en producción)
-  const debugAsyncStorage = async () => {
-    try {
-      const savedTasks = await AsyncStorage.getItem(TASKS_KEY);
-      const savedCompleted = await AsyncStorage.getItem(COMPLETED_TASKS_KEY);
-      console.log('=== DEBUG AsyncStorage ===');
-      console.log('Tasks in storage:', savedTasks ? JSON.parse(savedTasks).length : 0);
-      console.log('Completed tasks in storage:', savedCompleted ? JSON.parse(savedCompleted).length : 0);
-      console.log('Tasks in memory:', tasks.length);
-      console.log('Completed tasks in memory:', completedTasks.length);
-      console.log('isLoaded:', isLoaded);
-      console.log('Raw tasks storage:', savedTasks);
-      console.log('Raw completed storage:', savedCompleted);
-      console.log('========================');
-    } catch (error) {
-      console.error('Error debugging AsyncStorage:', error);
-    }
-  };
-
   return (
     <TasksContext.Provider value={{ 
       tasks, 
@@ -216,8 +196,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteCompletedTask,
       setTasks, 
       petName, 
-      setPetName,
-      debugAsyncStorage
+      setPetName
     }}>
       {children}
     </TasksContext.Provider>

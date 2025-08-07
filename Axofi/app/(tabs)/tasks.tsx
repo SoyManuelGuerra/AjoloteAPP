@@ -41,7 +41,7 @@ function sortTasksByPriority(tasks: Task[]): Task[] {
 }
 
 export default function TasksScreen() {
-  const { tasks, completedTasks, addTask, editTask, deleteTask, toggleCompleteTask, moveToCompleted, restoreTask, deleteCompletedTask, debugAsyncStorage } = useTasks();
+  const { tasks, completedTasks, addTask, editTask, deleteTask, toggleCompleteTask, moveToCompleted, restoreTask, deleteCompletedTask } = useTasks();
   const { addPoints } = usePoints();
   const [modalVisible, setModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
@@ -383,13 +383,6 @@ export default function TasksScreen() {
           onPress={() => setHelpModalVisible(true)}
         >
           <Ionicons name="information-circle-outline" size={20} color={palette.textSecondary} />
-        </TouchableOpacity>
-        {/* DEBUG - Botón temporal para verificar AsyncStorage */}
-        <TouchableOpacity 
-          style={{ marginLeft: 8, padding: 4, backgroundColor: 'red', borderRadius: 4 }}
-          onPress={debugAsyncStorage}
-        >
-          <Text style={{ color: 'white', fontSize: 10 }}>DEBUG</Text>
         </TouchableOpacity>
       </View>
       <View style={{ width: '100%' }}>
