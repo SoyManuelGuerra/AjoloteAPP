@@ -2,16 +2,13 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Modal, TextI
 import { useState , useEffect , useRef } from 'react';
 import { Colors } from '../../constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Svg, Circle, Rect } from 'react-native-svg';
 import { useTasks, Task } from '../../context/TasksContext';
 import { usePoints } from '../../context/PointsContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-// Quitar importación de reanimated y AnimatedRect
-// import Animated, { FadeIn, FadeOut, Layout, useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
-// import { Svg, Circle, Rect } from 'react-native-svg';
+// Removed react-native-reanimated imports for better performance
 
 
 
@@ -29,10 +26,7 @@ const DUE_DATE_OPTIONS = [
   { value: 'later', label: 'Más adelante', date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
 ];
  
-const initialTasks: Task[] = [
-  { id: '1', title: 'Tarea de ejemplo 1', completed: false },
-  { id: '2', title: 'Tarea de ejemplo 2', completed: false },
-];
+// Initial tasks are now managed by TasksContext
 
 
 
@@ -47,7 +41,7 @@ function sortTasksByPriority(tasks: Task[]): Task[] {
 }
 
 export default function TasksScreen() {
-  const { tasks, completedTasks, addTask, editTask, deleteTask, toggleCompleteTask, moveToCompleted, restoreTask, deleteCompletedTask } = useTasks();
+  const { tasks, completedTasks, addTask, editTask, deleteTask, toggleCompleteTask, moveToCompleted, restoreTask, deleteCompletedTask, debugAsyncStorage } = useTasks();
   const { addPoints } = usePoints();
   const [modalVisible, setModalVisible] = useState(false);
   const [taskInput, setTaskInput] = useState('');
@@ -81,8 +75,6 @@ export default function TasksScreen() {
     ? ['#2D2F36', '#3A3D45', '#484C55']
     : ['#F2ECE6', '#E7DFD6', '#DDD2C4'];
 
-  const TASKS_KEY = 'ajolote_tasks';
-
   // Abrir modal automáticamente si se recibe el parámetro
   useEffect(() => {
     if (params.openModal === 'true') {
@@ -93,21 +85,7 @@ export default function TasksScreen() {
     }
   }, [params.openModal]);
 
-  // Elimina el estado local de tasks y toda la lógica de persistencia
-  // useEffect(() => {
-  //   (async () => {
-  //     const saved = await AsyncStorage.getItem(TASKS_KEY);
-  //     if (saved) setTasks(JSON.parse(saved));
-  //   })();
-  // }, []);
-
-  // useEffect(() => {
-  //   AsyncStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
-  // }, [tasks]);
-
-  // useEffect(() => {
-  //   AsyncStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
-  // }, []);
+  // AsyncStorage persistence is now handled by TasksContext
 
   const openAddModal = () => {
     setEditingTask(null);
@@ -364,10 +342,7 @@ export default function TasksScreen() {
     }));
   };
 
-  // Reemplaza setTasks por las funciones del contexto en agregar, editar, eliminar, completar
-  // const toggleCompleteTask = (id: string) => {
-  //   setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-  // };
+  // Task operations are now handled by TasksContext functions
 
   // Nueva función para manejar el toggle y sumar puntos
   const handleToggleCompleteTask = (id: string) => {
@@ -391,12 +366,7 @@ export default function TasksScreen() {
   const circumference = 2 * Math.PI * radius;
   const progressStroke = circumference * (1 - progress);
 
-  // Eliminar lógica de animación
-  // const progressAnim = useSharedValue(0);
-  // useEffect(() => {
-  //   progressAnim.value = withTiming(220 * progress, { duration: 600 });
-  // }, [progress]);
-  // const animatedProps = useAnimatedProps(() => ({ width: progressAnim.value }));
+  // Animation logic removed for better performance
 
   return (
     <View style={[styles.container, { backgroundColor: palette.background }] }>
@@ -413,6 +383,13 @@ export default function TasksScreen() {
           onPress={() => setHelpModalVisible(true)}
         >
           <Ionicons name="information-circle-outline" size={20} color={palette.textSecondary} />
+        </TouchableOpacity>
+        {/* DEBUG - Botón temporal para verificar AsyncStorage */}
+        <TouchableOpacity 
+          style={{ marginLeft: 8, padding: 4, backgroundColor: 'red', borderRadius: 4 }}
+          onPress={debugAsyncStorage}
+        >
+          <Text style={{ color: 'white', fontSize: 10 }}>DEBUG</Text>
         </TouchableOpacity>
       </View>
       <View style={{ width: '100%' }}>
